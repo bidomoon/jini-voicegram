@@ -8,6 +8,16 @@
 [functions]
   node_bundler = "esbuild"
 [[redirects]]
+  from = "/api/instagram"
+  to = "/.netlify/functions/instagram"
+  status = 200
+  force = true
+[[redirects]]
+  from = "/api/media"
+  to = "/.netlify/functions/media"
+  status = 200
+  force = true
+[[redirects]]
   from = "/api/chat"
   to = "/.netlify/functions/chat"
   status = 200
