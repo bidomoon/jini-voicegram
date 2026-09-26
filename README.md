@@ -42,3 +42,8 @@ TypeScript 정적 검사 통과. 한국어 명령 6개 시나리오 통과.
 - Netlify에서는 ChatGPT 인증 헤더를 신뢰하지 않음. 별도 검증된 로그인/사용량 한도 구성 전 AI 생성을 열지 말 것.
 - 기존 Sites 서버용 AI 어댑터는 `app/api/studio/route.ts`에 유지. Netlify 생성 어댑터 이식은 아직 미완료.
 - GitHub 저장과 Netlify 자동 배포는 별도 연결이며, 수동 소스 업로드 배포가 자동 배포 연결을 의미하지 않음.
+
+### 검증된 Netlify 게시 경로
+Netlify 원격 의존성 설치는 실패하여, 로컬 빌드 결과를 게시하는 경로를 사용합니다.
+`npm run build:netlify` → `node scripts/package-netlify.mjs` → `outputs/netlify-deploy`를 Netlify에 업로드.
+패키지는 정적 앱과 의존성 없는 상태 확인 Function을 포함합니다. GitHub 자동 빌드 연결은 아직 설정되지 않았습니다.
