@@ -33,3 +33,12 @@ TypeScript 정적 검사 통과. 한국어 명령 6개 시나리오 통과.
 
 ## 개발
 의존성 설치 및 배포는 Sites 스킬 워크플로를 사용. .env.example은 변수 이름만 포함. 비밀값을 클라이언트 또는 저장소에 넣지 말 것.
+
+## Netlify 배포
+- 대상 팀: jini-nova / 프로젝트: jini-voicegram
+- 빌드: `npm run build:netlify` / 출력: `dist-netlify`
+- 동일한 React 편집 화면을 Vite로 빌드하며 Sites 빌드는 유지.
+- `/api/studio`는 Netlify Function으로 연결. 현재 생성 미연결 상태와 명확한 503 응답을 제공.
+- Netlify에서는 ChatGPT 인증 헤더를 신뢰하지 않음. 별도 검증된 로그인/사용량 한도 구성 전 AI 생성을 열지 말 것.
+- 기존 Sites 서버용 AI 어댑터는 `app/api/studio/route.ts`에 유지. Netlify 생성 어댑터 이식은 아직 미완료.
+- GitHub 저장과 Netlify 자동 배포는 별도 연결이며, 수동 소스 업로드 배포가 자동 배포 연결을 의미하지 않음.
