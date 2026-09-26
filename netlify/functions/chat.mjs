@@ -13,6 +13,7 @@ export default async function handler(req){
  if(!ready())return reply({error:'자유 대화 AI가 아직 연결되지 않았어요. 현재는 기본 편집만 사용할 수 있어요.',code:'NOT_CONFIGURED'},503);
  if(req.headers.get('origin')!==new URL(req.url).origin)return reply({error:'요청 경로를 확인해주세요.'},403);
  let b;try{const raw=await req.text();if(raw.length>30000)return reply({error:'대화가 너무 깁니다. 새 요청을 짧게 입력해주세요.'},413);b=JSON.parse(raw);}catch{return reply({error:'요청을 읽지 못했어요.'},400);}
+ if(!b||typeof b!=='object'||Array.isArray(b))return reply({error:'올바른 요청이 필요합니다.'},400);
  if(b.action==='unlock'){if(typeof b.code!=='string'||!equal(b.code,process.env.VOICEGRAM_ACCESS_CODE))return reply({error:'테스트 접근 코드를 확인해주세요.'},401);const payload=Buffer.from(JSON.stringify({exp:Date.now()+8*3600000,nonce:randomBytes(16).toString('hex')})).toString('base64url');return reply({authenticated:true},200,{'Set-Cookie':`vg_session=${payload}.${sign(payload)}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=28800`});}
  if(!session(req))return reply({error:'AI 대화 테스트 연결이 필요합니다.',code:'AUTH_REQUIRED'},401);
  if(typeof b.message!=='string'||!b.message.trim()||b.message.length>2000)return reply({error:'1~2,000자로 이야기해주세요.'},400);
