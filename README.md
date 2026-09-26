@@ -55,3 +55,10 @@ Netlify 원격 의존성 설치는 실패하여, 로컬 빌드 결과를 게시�
 - 현재 AI 생성/직접 게시/자유 대화 해석은 미연결. “이대로 만들어줘”는 현재 편집 결과를 렌더링하며 유료 AI 모드에서는 확인창만 열림.
 - WebMCP 준비 도구는 제작/저장/공유를 실행하지 않도록 제한.
 - 현재 Netlify 배포를 우선 업데이트. 기존 Sites 주소는 앞선 버전으로 남아 있음.
+
+## Conversational editing (Netlify)
+The chat UI carries recent conversation and current edit state to `/api/chat`; it supports undo and text visibility. Photo pixels are not sent to chat. Without configuration it clearly labels deterministic basic edits and does not pretend freeform AI is active.
+
+To enable a private pilot, securely set `OPENAI_API_KEY`, `CHAT_ENABLED=true`, and a random `VOICEGRAM_ACCESS_CODE` of at least 24 characters in this site's Netlify environment. Optional `OPENAI_CHAT_MODEL` defaults to `gpt-4.1-mini`. Never enter API keys into chat or commit them. The tester code creates an 8-hour secure HttpOnly session. Maintain the existing Netlify team protection. This pilot gate is not production user authentication or a durable spending limit. No paid API call has been verified yet. Image/video generation and direct external posting remain disconnected on Netlify.
+
+Launch target and outstanding commercial requirements: [docs/launch-plan.md](docs/launch-plan.md).
