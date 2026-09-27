@@ -24,3 +24,6 @@ AI image generation still uses the existing confirmed-cost flow. Runway video re
 
 ## Reference
 Netlify Blobs strong consistency and conditional `onlyIfMatch`/`onlyIfNew` writes verified against official documentation on 2026-09-26: https://docs.netlify.com/build/data-and-storage/netlify-blobs/
+
+## 2026-09-27 account extension
+Kakao account identity and server sessions have been added, with provider keys/activation still pending. Existing tester device identities are retained separately. See `kakao-toss-setup.md` for current status; earlier device-only limitations apply to the tester path.

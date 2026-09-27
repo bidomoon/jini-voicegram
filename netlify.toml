@@ -33,6 +33,21 @@
   status = 200
   force = true
 [[redirects]]
+  from = "/api/auth/callback"
+  to = "/.netlify/functions/auth"
+  status = 200
+  force = true
+[[redirects]]
+  from = "/api/auth"
+  to = "/.netlify/functions/auth"
+  status = 200
+  force = true
+[[redirects]]
+  from = "/api/billing"
+  to = "/.netlify/functions/billing"
+  status = 200
+  force = true
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
