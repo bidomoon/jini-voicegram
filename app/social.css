@@ -161,3 +161,23 @@
 .tile-words>.tile-excerpt{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;font-size:inherit;line-height:inherit;color:inherit;margin:0}
 .creation-dialog input{padding:12px;border:1px solid #ded3ea;border-radius:12px;width:100%}
 .creation-dialog>p{font-size:14px;line-height:1.8;color:#735e84;overflow-wrap:anywhere}
+
+/* Creation recovery and explicit image editing. */
+.compose-fieldset{border:0;padding:0;margin:0;min-width:0}
+.draft-save-status{font-size:11px;color:#776b84;min-height:20px;text-align:right;margin:2px 0 4px!important}
+.reference-choice{display:flex;gap:12px;align-items:center;padding:10px 0 14px}
+.reference-choice img{width:60px;height:70px;object-fit:cover;border-radius:10px;border:2px solid #fff}
+.reference-choice label{display:flex;gap:8px;align-items:center;font-size:12px;color:#755882}
+.reference-choice input[type=checkbox]{width:20px;height:20px;flex-shrink:0}
+.art-style-choices{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.art-style-choices button{border:1px solid #e3d6f2;border-radius:20px;background:#fff;color:#826890;padding:8px 13px;min-height:42px;font-size:12px}
+.art-style-choices button[aria-pressed=true]{color:#664793;background:#e8ddf7;border-color:#bfa6dc;font-weight:700}
+.generation-recovery{padding:17px;background:#faf4e9;border:1px solid #eee0c4;border-radius:14px;color:#7c603f;margin:14px 0}
+.generation-recovery strong{font-size:14px}.generation-recovery p{font-size:12px;line-height:1.8;margin:8px 0 13px}
+.generation-recovery .secondary{font-size:13px}.generation-recovery .text-button{width:100%;margin-top:7px}
+.review-image-tools{display:flex;align-items:center;gap:10px;margin:14px 0}
+.review-image-tools .secondary{margin:0;font-size:13px;flex:1}
+.review-image-tools .text-button{flex:1;font-size:12px!important}
+.compose-fieldset:disabled .reference-choice{opacity:.6}
+@media(max-width:767px){.art-style-choices button{padding:8px 11px;min-height:44px}.reference-choice label{font-size:11px}.draft-save-status{font-size:10px}}
+.creation-dialog .retry-cost-note{background:#fff2e0;border:1px solid #f0d8b0;border-radius:12px;padding:14px;color:#815726}

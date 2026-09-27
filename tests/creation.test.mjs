@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import {randomUUID} from 'node:crypto';
+import {memoryStore} from './helpers/memory-store.mjs';
 import {readFileSync} from 'node:fs';
 import {transformSync} from 'esbuild';
 const compiled=transformSync(readFileSync(new URL('../lib/creation-intent.ts',import.meta.url),'utf8'),{loader:'ts',format:'esm'}).code;
@@ -12,7 +14,7 @@ test('drawing requests are media intent, while diary entries and negatives stay 
 test('image adapter checks session and confirmation before calling the provider',async()=>{
  const priorEnv={...process.env},priorFetch=globalThis.fetch;
  process.env.VOICEGRAM_ACCESS_CODE='isolated-test-code-not-a-real-secret-123';process.env.OPENAI_API_KEY='test-only';process.env.MEDIA_ENABLED='true';
- const {default:studio}=await import('../netlify/functions/studio.mjs');
+ const {createStudioHandler}=await import('../netlify/functions/studio.mjs');const memory=memoryStore();const studio=createStudioHandler({store:()=>memory});
  const {sign}=await import('../netlify/functions/_shared/security.mjs');
  const payload=Buffer.from(JSON.stringify({exp:Date.now()+60000})).toString('base64url');
  const headers={origin:'https://test.example',cookie:`vg_session=${payload}.${sign(payload)}`};let calls=0;
@@ -20,7 +22,7 @@ test('image adapter checks session and confirmation before calling the provider'
  try{
   assert.equal((await(await studio(new Request('https://test.example/api/studio'))).json()).authenticated,false);
   assert.equal((await(await studio(new Request('https://test.example/api/studio',{headers}))).json()).authenticated,true);
-  const form=()=>{const f=new FormData();f.set('prompt','예쁜 고양이 그려줘');f.set('kind','image');f.set('confirmed','true');return f;};
+  const form=()=>{const f=new FormData();f.set('requestId',randomUUID());f.set('prompt','예쁜 고양이 그려줘');f.set('kind','image');f.set('confirmed','true');return f;};
   assert.equal((await studio(new Request('https://test.example/api/studio',{method:'POST',body:form(),headers:{origin:headers.origin}}))).status,401);
   const unconfirmed=form();unconfirmed.delete('confirmed');assert.equal((await studio(new Request('https://test.example/api/studio',{method:'POST',body:unconfirmed,headers}))).status,400);assert.equal(calls,0);
   const result=await studio(new Request('https://test.example/api/studio',{method:'POST',body:form(),headers}));assert.equal(result.status,200);assert.equal((await result.json()).image,'data:image/jpeg;base64,test-image-bytes');assert.equal(calls,1);

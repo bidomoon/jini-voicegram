@@ -4,13 +4,13 @@ import {guard,env,json} from './_shared/security.mjs';
 import {accountSession,deviceIdentity} from './_shared/accounts.mjs';
 import {empty,visible,update} from './_shared/social-core.mjs';
 const sign=s=>createHmac('sha256',env('SOCIAL_SESSION_SECRET')).update(s).digest('hex');
-export default async function(req){
+export function createSocialHandler({store:storeFactory=()=>getStore({name:'voicegram-social-beta-v1',consistency:'strong'})}={}){return async function(req){
  let account;try{account=await accountSession(req);}catch{return json({error:'로그인 상태를 확인하지 못했어요.'},503);}
  const denied=account?(req.method!=='GET'&&req.headers.get('origin')!==new URL(req.url).origin?json({error:'잘못된 요청 출처입니다.'},403):null):guard(req);if(denied)return denied;
  if((env('SOCIAL_SESSION_SECRET')||'').length<32)return json({error:'커뮤니티 연결 설정을 확인해주세요.'},503);
  if(!['GET','POST'].includes(req.method))return json({error:'지원하지 않는 메서드입니다.'},405);
  const existing=account?.uid||deviceIdentity(req),uid=existing||randomUUID();
- const store=getStore({name:'voicegram-social-beta-v1',consistency:'strong'});
+ const store=storeFactory();
  const respond=(data,status=200)=>{const r=json(data,status);if(!existing){const exp=Date.now()+31536000000;r.headers.append('Set-Cookie',`vg_person=${uid}.${exp}.${sign('person:'+uid+'.'+exp)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=31536000`);}return r;};
  try{
  if(req.method==='GET'){
@@ -32,4 +32,5 @@ export default async function(req){
  }else {const raw=await req.text();if(raw.length>10000)return respond({error:'요청이 너무 깁니다.'},413);a=JSON.parse(raw);if(a.action==='publish')return respond({error:'게시 양식을 사용해주세요.'},400);}
  const state=await update(store,uid,a);if(a.action==='delete')await store.delete('media/'+a.id);return respond({...visible(state,uid),authProvider:account?'kakao':'tester'});
  }catch(e){console.error('Social request failed',e.status||500);return respond({error:e.status?e.message:'연결을 확인하지 못했어요. 잠시 후 다시 시도해주세요.'},e.status||500);}
-}
+};}
+export default createSocialHandler();
