@@ -10,7 +10,7 @@
 - 프로필: 이름·소개·이모지 편집, 내 게시물, 저장한 글. 홈과 내 프로필 모두 작성 진입 버튼 제공.
 
 ## 연결 상태와 범위
-배포 대상은 Netlify `jini-nova / jini-voicegram`: https://jini-voicegram.netlify.app
+배포 대상은 Netlify `jini-sale-item / jini-voicegram`: https://jini-voicegram.netlify.app
 
 소규모 비공개 테스트 단계. 팀 SSO와 테스트 접근 코드가 필요하며, 기존 기기별 테스트 프로필을 유지한다. 카카오 회원 로그인 연동은 구현했으며, 키 등록과 실제 계정 검증 후 활성화한다. 게시물·댓글·좋아요·팔로우·차단·신고는 서버에 저장한다. 예시 글은 명시적으로 표시하며 가짜 반응 수를 넣지 않는다. 임시 작성과 저장 목록은 기기에 보관한다.
 

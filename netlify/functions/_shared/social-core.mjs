@@ -25,9 +25,14 @@ export function mutate(s,uid,a,now=Date.now()){
  else fail('지원하지 않는 요청입니다.');return s;
 }
 export function visible(s,uid){
- const blocked=id=>s.blocks.some(b=>(b.user===uid&&b.target===id)||(b.user===id&&b.target===uid));
+ // Index once per response instead of scanning all reactions for every post.
+ const blockedIds=new Set();
+ for(const b of s.blocks){if(b.user===uid)blockedIds.add(b.target);if(b.target===uid)blockedIds.add(b.user);}
+ const blocked=id=>blockedIds.has(id),counts=new Map(),liked=new Set(),comments=new Map();
+ for(const l of s.likes){if(!blocked(l.user))counts.set(l.post,(counts.get(l.post)||0)+1);if(l.user===uid)liked.add(l.post);}
+ for(const c of s.comments){if(blocked(c.user))continue;const group=comments.get(c.post);if(group)group.push(c);else comments.set(c.post,[c]);}
  const profiles=Object.values(s.profiles).filter(p=>!blocked(p.id));
- const posts=s.posts.filter(p=>!p.deleted&&!blocked(p.user)).sort((a,b)=>b.created-a.created).map(p=>({...p,media:p.media?{type:p.media.type,url:`/api/social?media=${p.id}`} : null,likes:s.likes.filter(l=>l.post===p.id&&!blocked(l.user)).length,liked:s.likes.some(l=>l.post===p.id&&l.user===uid),comments:s.comments.filter(c=>c.post===p.id&&!blocked(c.user))}));
+ const posts=s.posts.filter(p=>!p.deleted&&!blocked(p.user)).sort((a,b)=>b.created-a.created).map(p=>({...p,media:p.media?{type:p.media.type,url:`/api/social?media=${p.id}`} : null,likes:counts.get(p.id)||0,liked:liked.has(p.id),comments:comments.get(p.id)||[]}));
  const mine=new Set(posts.filter(p=>p.user===uid).map(p=>p.id));
  const notifications=[...s.likes.filter(l=>mine.has(l.post)&&l.user!==uid).map(l=>({...l,type:'like'})),...s.comments.filter(c=>mine.has(c.post)&&c.user!==uid).map(c=>({...c,type:'comment'})),...s.follows.filter(f=>f.target===uid).map(f=>({...f,type:'follow'}))].filter(n=>!blocked(n.user)).sort((a,b)=>b.created-a.created).slice(0,50);
  return {me:s.profiles[uid]||{id:uid,name:'새로운 이웃',bio:'',emoji:'🙂'},profiles,posts,following:s.follows.filter(f=>f.user===uid&&!blocked(f.target)).map(f=>f.target),followers:s.follows.filter(f=>f.target===uid&&!blocked(f.user)).map(f=>f.user),blocked:s.blocks.filter(b=>b.user===uid).map(b=>({id:b.target,name:s.profiles[b.target]?.name||'사용자'})),notifications};
