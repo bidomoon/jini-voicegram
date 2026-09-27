@@ -1,8 +1,8 @@
-import {env,json,guard,ticket,validTicket} from './_shared/security.mjs';
+import {env,json,guard,ticket,validTicket,session} from './_shared/security.mjs';
 const capabilities=()=>({image:!!env('OPENAI_API_KEY')&&env('MEDIA_ENABLED')==='true',video:!!env('RUNWAYML_API_SECRET')&&env('MEDIA_ENABLED')==='true',instagram:false,imageModel:env('OPENAI_IMAGE_MODEL')||'gpt-image-1.5',videoModel:'gen4.5'});
 const runway=(path,options={})=>fetch('https://api.dev.runwayml.com/v1/'+path,{...options,headers:{Authorization:`Bearer ${env('RUNWAYML_API_SECRET')}`,'X-Runway-Version':'2024-11-06','Content-Type':'application/json'},signal:AbortSignal.timeout(45000)});
 export default async function handler(req){
- const u=new URL(req.url);if(req.method==='GET'&&!u.searchParams.has('id'))return json(capabilities());
+ const u=new URL(req.url);if(req.method==='GET'&&!u.searchParams.has('id'))return json({...capabilities(),authenticated:!!session(req)});
  const blocked=guard(req);if(blocked)return blocked;
  try{
  if(req.method==='GET'){
