@@ -23,6 +23,11 @@
   status = 200
   force = true
 [[redirects]]
+  from = "/api/video-plan"
+  to = "/.netlify/functions/video-plan"
+  status = 200
+  force = true
+[[redirects]]
   from = "/api/studio"
   to = "/.netlify/functions/studio"
   status = 200
