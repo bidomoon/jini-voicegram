@@ -23,6 +23,16 @@ export async function resumeLoginDraft(){
  return validDraft(draft)&&draft.postId===m.postId&&hasDraftContent(draft)?{scope:m.scope,draft}:null;
 }
 export function clearLoginDraft(){try{sessionStorage.removeItem(marker);}catch{}}
+const spaceMarker=(space:'production'|'verification',uid:string)=>'vg-space-draft:'+space+':'+uid;
+export function stashSpaceDraft(space:'production'|'verification',uid:string){
+ const current=sessionStorage.getItem(marker);
+ if(current)sessionStorage.setItem(spaceMarker(space,uid),current);
+ sessionStorage.removeItem(marker);
+}
+export function activateSpaceDraft(space:'production'|'verification',uid:string){
+ const saved=sessionStorage.getItem(spaceMarker(space,uid));
+ if(saved)sessionStorage.setItem(marker,saved);else sessionStorage.removeItem(marker);
+}
 export function waitForDraftSave(event:Event,promise:Promise<unknown>){
  const detail=(event as CustomEvent<SaveRequest>).detail;
  if(detail?.waitUntil)detail.waitUntil(promise);else void promise.catch(()=>{});
