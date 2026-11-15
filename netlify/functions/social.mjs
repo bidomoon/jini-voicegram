@@ -18,9 +18,11 @@ export function createSocialHandler({store:storeFactory=()=>getStore({name:'voic
  try{
  if(req.method==='GET'){
  const state=await store.get('community',{type:'json'})||empty();const data=visible(state,uid),media=new URL(req.url).searchParams.get('media');
+ if(state.closed?.[uid])return json({error:'삭제된 계정입니다. 다시 로그인해주세요.',code:'ACCOUNT_CLOSED'},410);
  if(media){const p=data.posts.find(p=>p.id===media);if(!p?.media)return json({error:'미디어를 찾을 수 없습니다.'},404);const asset=await store.getWithMetadata('media/'+media,{type:'arrayBuffer'});if(!asset)return json({error:'파일을 찾을 수 없습니다.'},404);return mediaResponse(asset.data,asset.metadata.type,req.headers.get('range'));}
  return respond({...data,authProvider:account?'kakao':'tester'});
  }
+ if((await store.get('community',{type:'json'}))?.closed?.[uid])return json({error:'삭제된 계정입니다. 다시 로그인해주세요.',code:'ACCOUNT_CLOSED'},410);
  const uploadId=new URL(req.url).searchParams.get('upload');
  if(uploadId){if(!req.headers.get('content-type')?.startsWith('application/octet-stream')||Number(req.headers.get('content-length'))>2000000)return respond({error:'영상 조각이 너무 큽니다.'},413);const reader=req.body?.getReader(),parts=[];let size=0;if(!reader)return respond({error:'영상이 비어 있어요.'},400);try{for(;;){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>2000000){await reader.cancel();return respond({error:'영상 조각이 너무 큽니다.'},413);}parts.push(value);}}finally{reader.releaseLock();}const index=new URL(req.url).searchParams.get('part');if(index===null||!/^\d+$/.test(index))return respond({error:'영상 조각 번호가 필요합니다.'},400);await uploadPart(store,uid,uploadId,Number(index),Buffer.concat(parts));return respond({received:true});}
  if(Number(req.headers.get('content-length'))>4500000)return respond({error:'파일 크기가 너무 큽니다.'},413);
@@ -37,7 +39,7 @@ const attached=form.get('uploadId');if(attached){if(attached!==id||file||videoJo
  const mediaKey='media/'+id;const oldMedia=await store.getMetadata(mediaKey);if(oldMedia&&oldMedia.metadata.user!==uid)return respond({error:'중복 파일 요청입니다.'},409);
  const uploaded=await store.set(mediaKey,bytes.buffer,{onlyIfNew:true,metadata:{type:file.type,user:uid}});if(!uploaded.modified&&(await store.getMetadata(mediaKey))?.metadata.user!==uid)return respond({error:'중복 파일 요청입니다.'},409);a.media={type:file.type};
  }
- }else {const raw=await req.text();if(raw.length>10000)return respond({error:'요청이 너무 깁니다.'},413);a=JSON.parse(raw);if(a.action==='prepareUpload')return respond(await prepareUpload(store,uid,a));if(a.action==='publish')return respond({error:'게시 양식을 사용해주세요.'},400);}
+ }else {const raw=await req.text();if(raw.length>10000)return respond({error:'요청이 너무 깁니다.'},413);a=JSON.parse(raw);if(a.action==='prepareUpload')return respond(await prepareUpload(store,uid,a));if(a.action==='closeAccount')return respond({error:'설정의 계정 삭제 절차를 이용해주세요.'},400);if(a.action==='publish')return respond({error:'게시 양식을 사용해주세요.'},400);}
  const state=await update(store,uid,a);if(a.action==='delete')await store.delete('media/'+a.id);return respond({...visible(state,uid),authProvider:account?'kakao':'tester'});
  }catch(e){console.error('Social request failed',e.status||500);return respond({error:e.status?e.message:'연결을 확인하지 못했어요. 잠시 후 다시 시도해주세요.'},e.status||500);}
 };}

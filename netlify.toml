@@ -48,6 +48,16 @@
   status = 200
   force = true
 [[redirects]]
+  from = "/api/privacy"
+  to = "/.netlify/functions/privacy"
+  status = 200
+  force = true
+[[redirects]]
+  from = "/api/moderation"
+  to = "/.netlify/functions/moderation"
+  status = 200
+  force = true
+[[redirects]]
   from = "/api/billing"
   to = "/.netlify/functions/billing"
   status = 200

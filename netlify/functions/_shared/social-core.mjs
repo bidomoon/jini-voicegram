@@ -3,10 +3,20 @@ const fail=(message,status=400)=>{throw Object.assign(new Error(message),{status
 const text=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
 export const empty=()=>({version:1,profiles:{},posts:[],comments:[],likes:[],follows:[],blocks:[],reports:[],rates:{}});
 export function mutate(s,uid,a,now=Date.now()){
+ if(s.closed?.[uid])fail('삭제된 계정입니다. 다시 로그인해주세요.',410);
+ if(a.action==='closeAccount'){
+ if(a.confirm!=='내 계정 삭제'||!/^[a-f0-9-]{36}$/.test(a.requestId||''))fail('삭제 확인 문구를 입력해주세요.');
+ const own=new Set(s.posts.filter(p=>p.user===uid).map(p=>p.id));
+ s.closed={...s.closed,[uid]:{at:now,media:[...own]}};
+ delete s.profiles[uid];delete s.rates[uid];
+ s.posts=s.posts.filter(p=>p.user!==uid);s.comments=s.comments.filter(c=>c.user!==uid&&!own.has(c.post));s.likes=s.likes.filter(l=>l.user!==uid&&!own.has(l.post));
+ s.follows=s.follows.filter(f=>f.user!==uid&&f.target!==uid);s.blocks=s.blocks.filter(b=>b.user!==uid&&b.target!==uid);s.reports=s.reports.filter(r=>r.user!==uid&&!own.has(r.post));
+ return s;
+ }
  if(!s.profiles[uid]){if(Object.keys(s.profiles).length>=500)fail('테스트 참여 인원이 가득 찼습니다.',429);s.profiles[uid]={id:uid,name:'새로운 이웃',bio:'',emoji:'🙂'};}
  const recent=(s.rates[uid]||[]).filter(t=>now-t<60000);if(recent.length>=25)fail('잠시 쉬었다가 다시 시도해주세요.',429);s.rates[uid]=[...recent,now];
  const blocked=id=>s.blocks.some(b=>(b.user===uid&&b.target===id)||(b.user===id&&b.target===uid));
- const post=()=>{const p=s.posts.find(p=>p.id===a.id&&!p.deleted);if(!p||blocked(p.user))fail('게시물을 찾을 수 없습니다.',404);return p;};
+ const post=()=>{const p=s.posts.find(p=>p.id===a.id&&!p.deleted&&(!p.moderated||a.action==='delete'&&p.user===uid));if(!p||blocked(p.user))fail('게시물을 찾을 수 없습니다.',404);return p;};
  if(a.action==='profile'){const name=text(a.name,24);if(!name)fail('이름을 입력해주세요.');s.profiles[uid]={id:uid,name,bio:text(a.bio,100),emoji:['🙂','🌊','🌷','🐶','☕','🌳','🌙','🦋'].includes(a.emoji)?a.emoji:'🙂'};}
  else if(a.action==='publish'){
  if(!/^[a-f0-9-]{36}$/.test(a.id||''))fail('게시 요청 번호가 올바르지 않습니다.');
@@ -32,9 +42,10 @@ export function visible(s,uid){
  for(const l of s.likes){if(!blocked(l.user))counts.set(l.post,(counts.get(l.post)||0)+1);if(l.user===uid)liked.add(l.post);}
  for(const c of s.comments){if(blocked(c.user))continue;const group=comments.get(c.post);if(group)group.push(c);else comments.set(c.post,[c]);}
  const profiles=Object.values(s.profiles).filter(p=>!blocked(p.id));
- const posts=s.posts.filter(p=>!p.deleted&&!blocked(p.user)).sort((a,b)=>b.created-a.created).map(p=>({...p,media:p.media?{type:p.media.type,url:`/api/social?media=${p.id}`} : null,likes:counts.get(p.id)||0,liked:liked.has(p.id),comments:comments.get(p.id)||[]}));
+ const posts=s.posts.filter(p=>!p.deleted&&!p.moderated&&!blocked(p.user)).sort((a,b)=>b.created-a.created).map(p=>({...p,media:p.media?{type:p.media.type,url:`/api/social?media=${p.id}`} : null,likes:counts.get(p.id)||0,liked:liked.has(p.id),comments:comments.get(p.id)||[]}));
  const mine=new Set(posts.filter(p=>p.user===uid).map(p=>p.id));
  const notifications=[...s.likes.filter(l=>mine.has(l.post)&&l.user!==uid).map(l=>({...l,type:'like'})),...s.comments.filter(c=>mine.has(c.post)&&c.user!==uid).map(c=>({...c,type:'comment'})),...s.follows.filter(f=>f.target===uid).map(f=>({...f,type:'follow'}))].filter(n=>!blocked(n.user)).sort((a,b)=>b.created-a.created).slice(0,50);
  return {me:s.profiles[uid]||{id:uid,name:'새로운 이웃',bio:'',emoji:'🙂'},profiles,posts,following:s.follows.filter(f=>f.user===uid&&!blocked(f.target)).map(f=>f.target),followers:s.follows.filter(f=>f.target===uid&&!blocked(f.user)).map(f=>f.user),blocked:s.blocks.filter(b=>b.user===uid).map(b=>({id:b.target,name:s.profiles[b.target]?.name||'사용자'})),notifications};
 }
-export async function update(store,uid,action){for(let i=0;i<5;i++){const old=await store.getWithMetadata('community',{type:'json'});const next=mutate(old?.data||empty(),uid,action);const result=await store.setJSON('community',next,old?{onlyIfMatch:old.etag}:{onlyIfNew:true});if(result.modified)return next;}fail('다른 요청과 겹쳤습니다. 잠시 후 다시 시도해주세요.',409);}
+export async function atomicUpdate(store,change){for(let i=0;i<5;i++){const old=await store.getWithMetadata('community',{type:'json'});const next=change(old?.data||empty());const result=await store.setJSON('community',next,old?{onlyIfMatch:old.etag}:{onlyIfNew:true});if(result.modified)return next;}fail('다른 요청과 겹쳤습니다. 잠시 후 다시 시도해주세요.',409);}
+export const update=(store,uid,action)=>atomicUpdate(store,s=>mutate(s,uid,action));

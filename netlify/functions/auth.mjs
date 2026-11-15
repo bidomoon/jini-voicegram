@@ -3,11 +3,12 @@ import {json,session as testerSession} from './_shared/security.mjs';
 import {accountStore,accountSession,cookie,cookieHeader,opaque,hash,consumeState,providerAccount,kakaoConfig} from './_shared/accounts.mjs';
 import {update} from './_shared/social-core.mjs';
 import {inviteReady,inviteLogin} from './_shared/invite.mjs';
-export function createAuthHandler({storeFactory=accountStore,socialFactory=()=>getStore({name:'voicegram-social-beta-v1',consistency:'strong'}),request=fetch,config=kakaoConfig}={}){return async req=>{
+import {authorizedModerator} from './_shared/community-access.mjs';
+export function createAuthHandler({storeFactory=accountStore,socialFactory=()=>getStore({name:'voicegram-social-beta-v1',consistency:'strong'}),request=fetch,config=kakaoConfig}={}){return async(req,context)=>{
  const cfg=config(),url=new URL(req.url),action=url.pathname.endsWith('/callback')?'callback':url.searchParams.get('action');
  const redirect=(result,cookies=[])=>{const headers=new Headers({Location:cfg.origin+'/?auth='+result,'Cache-Control':'no-store','Referrer-Policy':'no-referrer'});for(const c of cookies)headers.append('Set-Cookie',c);return new Response(null,{status:303,headers});};
  try{
- if(req.method==='GET'&&action!=='callback'){const account=await accountSession(req,storeFactory()),tester=!!testerSession(req);return json({kakaoReady:cfg.ready,inviteReady:inviteReady(),authenticated:!!account||tester,provider:account?'kakao':tester?'tester':null,uid:account?.uid||null});}
+ if(req.method==='GET'&&action!=='callback'){const account=await accountSession(req,storeFactory()),tester=!!testerSession(req);return json({canModerate:!!await authorizedModerator(req,context,undefined,storeFactory()),kakaoReady:cfg.ready,inviteReady:inviteReady(),authenticated:!!account||tester,provider:account?'kakao':tester?'tester':null,uid:account?.uid||null});}
  if(action==='callback'&&req.method==='GET'){
  const state=url.searchParams.get('state')||'',expected=cookie(req,'vg_oauth');const clear=cookieHeader('vg_oauth','',0);
  if(!cfg.ready)return redirect('unavailable',[clear]);
@@ -20,7 +21,7 @@ export function createAuthHandler({storeFactory=accountStore,socialFactory=()=>g
  const me=await request('https://kapi.kakao.com/v2/user/me',{headers:{Authorization:'Bearer '+token.access_token},signal:AbortSignal.timeout(15000)});if(!me.ok)return redirect('failed',[clear]);const identity=await me.json();
  if(!Number.isSafeInteger(identity.id)||identity.id<=0)return redirect('failed',[clear]);
  const accounts=storeFactory(),account=await providerAccount(accounts,cfg.clientId,String(identity.id));
- const social=socialFactory(),current=await social.get('community',{type:'json'});if(!current?.profiles?.[account.uid])await update(social,account.uid,{action:'profile',name:typeof identity.properties?.nickname==='string'?identity.properties.nickname.slice(0,24):'새로운 이웃',emoji:'🙂'});
+ const social=socialFactory(),current=await social.get('community',{type:'json'});if(current?.closed?.[account.uid])return redirect('closed',[clear]);if(!current?.profiles?.[account.uid])await update(social,account.uid,{action:'profile',name:typeof identity.properties?.nickname==='string'?identity.properties.nickname.slice(0,24):'새로운 이웃',emoji:'🙂'});
  const sid=opaque();await accounts.setJSON('sessions/'+hash(sid),{uid:account.uid,provider:'kakao',exp:Date.now()+30*86400000,created:Date.now()},{onlyIfNew:true});
  return redirect('success',[clear,cookieHeader('vg_account',sid,30*86400)]);
  }
