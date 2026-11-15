@@ -271,3 +271,5 @@
 @media(max-width:600px){.first-story-guide{padding:20px 17px;margin-top:2px}.first-story-guide h2{font-size:19px}.first-story-guide li{flex-direction:column;align-items:flex-start;gap:8px;font-size:11px}.first-story-guide ol{gap:7px}.story-habit{padding:16px;align-items:flex-start;flex-direction:column;gap:8px}.story-habit .text-button{padding-left:0}.moderation-report{padding:17px}.privacy-actions{flex-direction:column}.operator-metrics>div{padding:17px}}
 
 .included-features{border:1px solid #e8e1f1;padding:20px;border-radius:16px;background:#fbf9ff}.included-features h3{font-size:16px}.included-features ul{padding-left:20px;margin:14px 0 0}.included-features li{font-size:14px;line-height:2.2;color:#83708f}
+
+.operator-checkout{margin-top:22px}.operator-checkout>summary{font-size:12px;color:#9985a5;cursor:pointer;padding:14px}.operator-checkout>.billing-page{margin-top:10px}
