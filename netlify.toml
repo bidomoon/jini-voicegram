@@ -48,6 +48,11 @@
   status = 200
   force = true
 [[redirects]]
+  from = "/api/selftest"
+  to = "/.netlify/functions/selftest"
+  status = 200
+  force = true
+[[redirects]]
   from = "/api/privacy"
   to = "/.netlify/functions/privacy"
   status = 200

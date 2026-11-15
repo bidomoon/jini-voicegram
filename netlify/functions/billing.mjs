@@ -11,7 +11,7 @@ export default async function(req,context){
  if(req.headers.get('origin')!==origin||new URL(req.url).origin!==origin)return json({error:'요청 출처를 확인해주세요.'},403);
  if(!cfg.ready)return json({error:'토스페이 결제 연결을 준비하고 있어요. 아직 결제되지 않습니다.'},503);
  try{
- const user=await accountSession(req);if(!user)return json({error:'카카오로 로그인한 뒤 이용해주세요.',code:'AUTH_REQUIRED'},401);if(!await authorizedModerator(req,context))return json({error:'운영자만 결제 연동 테스트를 진행할 수 있어요.'},403);
+ const user=await accountSession(req,undefined,Date.now(),context);if(!user)return json({error:'카카오로 로그인한 뒤 이용해주세요.',code:'AUTH_REQUIRED'},401);if(!await authorizedModerator(req,context))return json({error:'운영자만 결제 연동 테스트를 진행할 수 있어요.'},403);
  const raw=await req.text();if(raw.length>3000)return json({error:'요청이 너무 큽니다.'},413);const body=JSON.parse(raw);if(!body||typeof body!=='object')return json({error:'올바른 요청이 필요합니다.'},400);
  const store=getStore({name:'voicegram-billing-test-v1',consistency:'strong'});
  if(body.action==='order'){const order=await newTestOrder(store,user.uid,body.requestId);return json({orderId:order.orderId,orderName:order.name,amount:order.amount,currency:order.currency,customerKey:user.uid,clientKey:cfg.clientKey,variantKey:cfg.variantKey,successUrl:origin+'/?payment=success',failUrl:origin+'/?payment=fail',mode:'test'});}

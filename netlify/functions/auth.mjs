@@ -1,14 +1,14 @@
 import {getStore} from '@netlify/blobs';
 import {json,session as testerSession} from './_shared/security.mjs';
-import {accountStore,accountSession,cookie,cookieHeader,opaque,hash,consumeState,providerAccount,kakaoConfig} from './_shared/accounts.mjs';
+import {accountStore,accountSession,cookie,cookieHeader,opaque,hash,consumeState,providerAccount,kakaoConfig,ownerAccount} from './_shared/accounts.mjs';
 import {update} from './_shared/social-core.mjs';
 import {inviteReady,inviteLogin} from './_shared/invite.mjs';
-import {authorizedModerator} from './_shared/community-access.mjs';
+import {authorizedModerator,moderatorIdentity} from './_shared/community-access.mjs';
 export function createAuthHandler({storeFactory=accountStore,socialFactory=()=>getStore({name:'voicegram-social-beta-v1',consistency:'strong'}),request=fetch,config=kakaoConfig}={}){return async(req,context)=>{
  const cfg=config(),url=new URL(req.url),action=url.pathname.endsWith('/callback')?'callback':url.searchParams.get('action');
  const redirect=(result,cookies=[])=>{const headers=new Headers({Location:cfg.origin+'/?auth='+result,'Cache-Control':'no-store','Referrer-Policy':'no-referrer'});for(const c of cookies)headers.append('Set-Cookie',c);return new Response(null,{status:303,headers});};
  try{
- if(req.method==='GET'&&action!=='callback'){const account=await accountSession(req,storeFactory()),tester=!!testerSession(req);return json({canModerate:!!await authorizedModerator(req,context,undefined,storeFactory()),kakaoReady:cfg.ready,inviteReady:inviteReady(),authenticated:!!account||tester,provider:account?'kakao':tester?'tester':null,uid:account?.uid||null});}
+ if(req.method==='GET'&&action!=='callback'){const account=await accountSession(req,storeFactory(),Date.now(),context),tester=!!testerSession(req);return json({canModerate:!!await authorizedModerator(req,context,undefined,storeFactory()),ownerReady:!!moderatorIdentity(context)&&!!context?.site?.id,kakaoReady:cfg.ready,inviteReady:inviteReady(),authenticated:!!account||tester,provider:account?account.provider:tester?'tester':null,uid:account?.uid||null});}
  if(action==='callback'&&req.method==='GET'){
  const state=url.searchParams.get('state')||'',expected=cookie(req,'vg_oauth');const clear=cookieHeader('vg_oauth','',0);
  if(!cfg.ready)return redirect('unavailable',[clear]);
@@ -27,6 +27,15 @@ export function createAuthHandler({storeFactory=accountStore,socialFactory=()=>g
  }
  if(req.method!=='POST')return json({error:'지원하지 않는 요청입니다.'},405);
  if(req.headers.get('origin')!==url.origin||url.origin!==cfg.origin)return json({error:'요청 출처를 확인해주세요.'},403);
+ if(action==='owner'){
+ if(!moderatorIdentity(context)||!context?.site?.id)return json({error:'운영자 로그인을 확인해주세요.'},403);
+ const exp=Math.min(Date.now()+8*3600000,Number.isFinite(new Date(context.user.expiresAt).getTime())?new Date(context.user.expiresAt).getTime():Date.now()+8*3600000);if(exp<=Date.now())return json({error:'운영자 로그인 시간이 지났어요.'},401);
+ const accounts=storeFactory(),account=await ownerAccount(accounts,context),social=socialFactory(),current=await social.get('community',{type:'json'});
+ if(current?.closed?.[account.uid])return json({error:'삭제된 프로필입니다. 운영자 연결을 확인해주세요.'},410);
+ if(!current?.profiles?.[account.uid])await update(social,account.uid,{action:'profile',name:'지니팀 운영자',emoji:'🙂'});
+ const sid=opaque();
+ await accounts.setJSON('sessions/'+hash(sid),{uid:account.uid,provider:'netlify',subject:context.user.id,siteId:context.site.id,exp,created:Date.now()},{onlyIfNew:true});const r=json({authenticated:true,provider:'netlify'});r.headers.append('Set-Cookie',cookieHeader('vg_account',sid,Math.floor((exp-Date.now())/1000)));return r;
+ }
  if(action==='invite')return await inviteLogin(req);
  if(action==='start'){
  if(!cfg.ready)return json({error:'카카오 간편로그인을 준비하고 있어요. 연결이 완료되면 여기에서 시작할 수 있어요.',code:'KAKAO_NOT_CONFIGURED'},503);
