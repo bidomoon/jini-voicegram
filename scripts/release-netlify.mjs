@@ -1,0 +1,20 @@
+import {spawnSync} from 'node:child_process';
+import {writeFile,readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=fileURLToPath(new URL('..',import.meta.url));
+function run(args){const r=spawnSync(process.execPath,args,{cwd:root,encoding:'utf8'});process.stdout.write(r.stdout||'');process.stderr.write(r.stderr||'');if(r.status!==0)throw Error('Release stopped: '+args.join(' '));return r.stdout;}
+run(['node_modules/typescript/bin/tsc','--noEmit']);
+const tests=run(['--test','--test-reporter=spec',...['account-billing','creation','generation','social-projection','social','video','voice-upload'].map(n=>'tests/'+n+'.test.mjs')]);
+run(['node_modules/vite/bin/vite.js','build','--config','vite.netlify.config.ts']);
+run(['scripts/package-netlify.mjs']);
+const source=spawnSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).stdout.trim();
+const dirty=!!spawnSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'}).stdout.trim();
+const manifest={product:'보이스그램',builtAt:new Date().toISOString(),sourceCommit:source,sourceDirty:dirty,checks:{unitTests:Number(tests.match(/\btests\s+(\d+)/)?.[1])||null,typecheck:'passed',productionBuild:'passed',browser:'not verified for this release',realMicrophone:'not verified',realCamera:'not verified',productionDeploy:'not deployed'}};
+const target=path.join(root,'outputs/netlify-deploy');await writeFile(path.join(target,'RELEASE.json'),JSON.stringify(manifest,null,2));
+await writeFile(path.join(target,'DEPLOY.txt'),'Voicegram release\n\nFrom this extracted directory, with an authorized Netlify login:\nnetlify deploy --prod --site e78fcfa6-0dd7-45e0-a3e1-e417ce52b91c --dir public --functions netlify/functions\n\nKeep the existing site access controls. This package contains no API keys or user data.\nSee RELEASE.json for verified and unverified checks.\n');
+const archive=path.join(root,'outputs','voicegram-netlify-20261115.zip');
+const zipped=spawnSync('python3',['-c','import pathlib,sys,zipfile\np=pathlib.Path(sys.argv[1])\nwith zipfile.ZipFile(sys.argv[2],"w",zipfile.ZIP_DEFLATED) as z:\n for f in sorted(p.rglob("*")):\n  if f.is_file(): z.write(f,f.relative_to(p))\n',target,archive],{cwd:root,encoding:'utf8'});
+if(zipped.status!==0)throw Error(zipped.stderr||'Could not package release');
+const digest=createHash('sha256').update(await readFile(archive)).digest('hex');await writeFile(archive+'.sha256',digest+'  '+path.basename(archive)+'\n');console.log(JSON.stringify({archive,sha256:digest,checks:manifest.checks}));
