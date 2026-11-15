@@ -2,11 +2,12 @@ import {getStore} from '@netlify/blobs';
 import {json,session as testerSession} from './_shared/security.mjs';
 import {accountStore,accountSession,cookie,cookieHeader,opaque,hash,consumeState,providerAccount,kakaoConfig} from './_shared/accounts.mjs';
 import {update} from './_shared/social-core.mjs';
+import {inviteReady,inviteLogin} from './_shared/invite.mjs';
 export function createAuthHandler({storeFactory=accountStore,socialFactory=()=>getStore({name:'voicegram-social-beta-v1',consistency:'strong'}),request=fetch,config=kakaoConfig}={}){return async req=>{
  const cfg=config(),url=new URL(req.url),action=url.pathname.endsWith('/callback')?'callback':url.searchParams.get('action');
  const redirect=(result,cookies=[])=>{const headers=new Headers({Location:cfg.origin+'/?auth='+result,'Cache-Control':'no-store','Referrer-Policy':'no-referrer'});for(const c of cookies)headers.append('Set-Cookie',c);return new Response(null,{status:303,headers});};
  try{
- if(req.method==='GET'&&action!=='callback'){const account=await accountSession(req,storeFactory());return json({kakaoReady:cfg.ready,authenticated:!!account,provider:account?'kakao':testerSession(req)?'tester':null,uid:account?.uid||null});}
+ if(req.method==='GET'&&action!=='callback'){const account=await accountSession(req,storeFactory()),tester=!!testerSession(req);return json({kakaoReady:cfg.ready,inviteReady:inviteReady(),authenticated:!!account||tester,provider:account?'kakao':tester?'tester':null,uid:account?.uid||null});}
  if(action==='callback'&&req.method==='GET'){
  const state=url.searchParams.get('state')||'',expected=cookie(req,'vg_oauth');const clear=cookieHeader('vg_oauth','',0);
  if(!cfg.ready)return redirect('unavailable',[clear]);
@@ -25,6 +26,7 @@ export function createAuthHandler({storeFactory=accountStore,socialFactory=()=>g
  }
  if(req.method!=='POST')return json({error:'지원하지 않는 요청입니다.'},405);
  if(req.headers.get('origin')!==url.origin||url.origin!==cfg.origin)return json({error:'요청 출처를 확인해주세요.'},403);
+ if(action==='invite')return await inviteLogin(req);
  if(action==='start'){
  if(!cfg.ready)return json({error:'카카오 간편로그인을 준비하고 있어요. 연결이 완료되면 여기에서 시작할 수 있어요.',code:'KAKAO_NOT_CONFIGURED'},503);
  const state=opaque();await storeFactory().setJSON('oauth/'+hash(state),{exp:Date.now()+600000,used:false},{onlyIfNew:true});const target=new URL('https://kauth.kakao.com/oauth/authorize');target.search=new URLSearchParams({client_id:cfg.clientId,redirect_uri:cfg.origin+'/api/auth/callback',response_type:'code',state,prompt:'select_account'}).toString();

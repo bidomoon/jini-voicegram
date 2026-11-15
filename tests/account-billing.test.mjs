@@ -4,11 +4,33 @@ import {randomUUID} from 'node:crypto';
 import {createAuthHandler} from '../netlify/functions/auth.mjs';
 import {accountSession,hash,kakaoConfig} from '../netlify/functions/_shared/accounts.mjs';
 import {billingConfig,newTestOrder,confirmTestOrder} from '../netlify/functions/_shared/billing.mjs';
+import {session} from '../netlify/functions/_shared/security.mjs';
+import {createSocialHandler} from '../netlify/functions/social.mjs';
+import {memoryStore} from './helpers/memory-store.mjs';
 function memory(){const data=new Map();let version=0;return {data,async get(k){return structuredClone(data.get(k)?.data??null);},async getWithMetadata(k){return structuredClone(data.get(k)||null);},async setJSON(k,v,opt={}){const old=data.get(k);if(opt.onlyIfNew&&old||opt.onlyIfMatch&&old?.etag!==opt.onlyIfMatch)return {modified:false};data.set(k,{data:structuredClone(v),etag:String(++version)});return {modified:true};},async delete(k){data.delete(k);}};}
 const origin='https://app.example',config=()=>({origin,clientId:'app-1',clientSecret:'secret',ready:true});
 const req=(path,options={})=>new Request(origin+path,options);
 const post=(path)=>req(path,{method:'POST',headers:{origin}});
 const cookieValue=(r,name)=>r.headers.getSetCookie().find(v=>v.startsWith(name+'='))?.split(';')[0];
+test('invitation signs a community session without AI or Kakao and reports the active tester',async()=>{
+ process.env.VOICEGRAM_ACCESS_CODE='test-only-invitation-never-a-real-credential';process.env.SOCIAL_SESSION_SECRET='test-only-device-secret-never-a-real-credential';
+ delete process.env.OPENAI_API_KEY;process.env.CHAT_ENABLED='false';
+ const handler=createAuthHandler({storeFactory:memory,config:()=>({...config(),ready:false}),request:()=>{throw Error('No provider call is permitted');}});
+ const r=await handler(req('/api/auth?action=invite',{method:'POST',headers:{origin},body:JSON.stringify({code:process.env.VOICEGRAM_ACCESS_CODE})}));
+ assert.equal(r.status,200);const cookie=cookieValue(r,'vg_session');assert.match(r.headers.get('set-cookie'),/HttpOnly; Secure; SameSite=Strict/);assert.ok(session(req('/',{headers:{cookie}})));
+ const status=await(await handler(req('/api/auth',{headers:{cookie}}))).json();assert.equal(status.inviteReady,true);assert.equal(status.kakaoReady,false);assert.equal(status.authenticated,true);assert.equal(status.provider,'tester');assert.ok(!JSON.stringify(status).includes(process.env.VOICEGRAM_ACCESS_CODE));
+ const social=createSocialHandler({store:memoryStore}),form=new FormData();form.set('id',randomUUID());form.set('caption','초대 후 말로 만든 글');const published=await social(req('/api/social',{method:'POST',headers:{origin,cookie},body:form}));assert.equal(published.status,200);assert.equal((await published.json()).posts[0].caption,'초대 후 말로 만든 글');
+ const logout=await handler(req('/api/auth?action=logout',{method:'POST',headers:{origin,cookie}}));assert.match(logout.headers.getSetCookie().find(v=>v.startsWith('vg_session=')),/Max-Age=0/);
+});
+test('invitation rejects wrong codes, oversized bodies, cross-origin requests and missing community configuration',async()=>{
+ process.env.VOICEGRAM_ACCESS_CODE='test-only-invitation-never-a-real-credential';process.env.SOCIAL_SESSION_SECRET='test-only-device-secret-never-a-real-credential';
+ const handler=createAuthHandler({storeFactory:memory,config});
+ const invite=(body,source=origin)=>handler(req('/api/auth?action=invite',{method:'POST',headers:{origin:source},body}));
+ for(const body of [JSON.stringify({code:'wrong'}),JSON.stringify({code:123}),JSON.stringify({code:null})]){const r=await invite(body);assert.equal(r.status,403);assert.equal(r.headers.get('set-cookie'),null);}
+ assert.equal((await invite('not json')).status,400);assert.equal((await invite('x'.repeat(4097))).status,413);
+ assert.equal((await invite(JSON.stringify({code:process.env.VOICEGRAM_ACCESS_CODE}),'https://other.example')).status,403);
+ delete process.env.SOCIAL_SESSION_SECRET;assert.equal((await invite(JSON.stringify({code:process.env.VOICEGRAM_ACCESS_CODE}))).status,503);
+});
 test('OAuth state binding, token secrecy and same account across devices',async()=>{const accounts=memory(),social=memory();let calls=0;const handler=createAuthHandler({storeFactory:()=>accounts,socialFactory:()=>social,config,request:async(url,opts)=>{calls++;if(url.includes('/token')){assert.equal(opts.body.get('client_secret'),'secret');assert.equal(opts.body.get('redirect_uri'),origin+'/api/auth/callback');return Response.json({access_token:'provider-private-token'});}return Response.json({id:123456,properties:{nickname:'카카오 이웃'}});}});
  const begin=await handler(post('/api/auth?action=start'));const d=await begin.json(),state=new URL(d.authorizeUrl).searchParams.get('state');assert.equal(new URL(d.authorizeUrl).origin,'https://kauth.kakao.com');assert.ok(!JSON.stringify(d).includes('secret'));const cookies=cookieValue(begin,'vg_oauth');
  const bad=await handler(req('/api/auth/callback?state=wrong&code=abc',{headers:{cookie:cookies}}));assert.match(bad.headers.get('location'),/expired/);assert.equal(calls,0);

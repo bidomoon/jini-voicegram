@@ -4,6 +4,7 @@ import {guard,env,json} from './_shared/security.mjs';
 import {accountSession,deviceIdentity} from './_shared/accounts.mjs';
 import {completedVideo} from './_shared/video.mjs';
 import {prepareUpload,uploadPart,finishUpload} from './_shared/social-upload.mjs';
+import {mediaResponse} from './_shared/media-response.mjs';
 import {empty,visible,update} from './_shared/social-core.mjs';
 const sign=s=>createHmac('sha256',env('SOCIAL_SESSION_SECRET')).update(s).digest('hex');
 export function createSocialHandler({store:storeFactory=()=>getStore({name:'voicegram-social-beta-v1',consistency:'strong'})}={}){return async function(req){
@@ -17,7 +18,7 @@ export function createSocialHandler({store:storeFactory=()=>getStore({name:'voic
  try{
  if(req.method==='GET'){
  const state=await store.get('community',{type:'json'})||empty();const data=visible(state,uid),media=new URL(req.url).searchParams.get('media');
- if(media){const p=data.posts.find(p=>p.id===media);if(!p?.media)return json({error:'사진을 찾을 수 없습니다.'},404);const asset=await store.getWithMetadata('media/'+media,{type:'arrayBuffer'});if(!asset)return json({error:'파일을 찾을 수 없습니다.'},404);return new Response(new Blob([asset.data]).stream(),{headers:{'Content-Type':asset.metadata.type,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});}
+ if(media){const p=data.posts.find(p=>p.id===media);if(!p?.media)return json({error:'미디어를 찾을 수 없습니다.'},404);const asset=await store.getWithMetadata('media/'+media,{type:'arrayBuffer'});if(!asset)return json({error:'파일을 찾을 수 없습니다.'},404);return mediaResponse(asset.data,asset.metadata.type,req.headers.get('range'));}
  return respond({...data,authProvider:account?'kakao':'tester'});
  }
  const uploadId=new URL(req.url).searchParams.get('upload');

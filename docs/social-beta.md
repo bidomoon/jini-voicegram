@@ -11,7 +11,7 @@ Writes use strong consistency and conditional ETag updates. Post and comment IDs
 ## Deliberate beta limits
 This is not a production account system. Device identities cannot be recovered after cookie deletion and do not sync across devices. Server data is available to testers; team SSO remains enabled. A real account provider, account deletion/recovery, privacy/terms, moderation workflow and support must be completed before public launch. Reports are stored, not automatically reviewed. Blocking hides both users from each other and removes follow edges.
 
-The current bounded community state is intended for a small test: 500 profiles, 300 active posts, 3,000 comments. Writes are capped per identity (25/minute; posts at least 15 seconds apart). Media limit is 4MB. Database pagination, storage lifecycle/abandoned upload cleanup, stronger abuse protection, and administrative moderation are launch gates. Cookie loss allows a new tester identity; this is not a public anti-abuse or authentication system.
+The current bounded community state is intended for a small test: 500 profiles, 300 active posts, 3,000 comments. Writes are capped per identity (25/minute; posts at least 15 seconds apart). Photos are compressed to at most 4MB; uploaded MP4/MOV/WebM videos support up to 20MB through authenticated 2MB chunks (2026-11-15). Database pagination, a full storage lifecycle, stronger abuse protection, and administrative moderation are launch gates. Cookie loss allows a new tester identity; this is not a public anti-abuse or authentication system.
 
 AI image generation still uses the existing confirmed-cost flow. Runway video remains dependent on its separate API configuration. Browser speech recognition depends on device/browser support and permissions; no background driving assistant or hands-free publishing is claimed.
 
@@ -27,3 +27,7 @@ Netlify Blobs strong consistency and conditional `onlyIfMatch`/`onlyIfNew` write
 
 ## 2026-09-27 account extension
 Kakao account identity and server sessions have been added, with provider keys/activation still pending. Existing tester device identities are retained separately. See `kakao-toss-setup.md` for current status; earlier device-only limitations apply to the tester path.
+
+## 2026-11-15 posting extension
+
+See [voice posting release](voice-posting-2026-11-15.md) for browser dictation, explicit review/publish commands, independent invite login, attachment-safe login recovery, native recording, 20MB chunk uploads, immutable retry IDs and byte-range video playback. Expired chunk uploads are cleaned by the existing scheduled cleanup function; this does not constitute a full retention/backup system.
