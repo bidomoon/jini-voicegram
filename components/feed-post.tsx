@@ -18,7 +18,7 @@ export default function FeedPost({post: p, author, me, following, saved, busy, s
   {long && !detail && <button className="caption-toggle" aria-expanded={expanded} onClick={() => setExpanded(v => !v)}>{expanded ? '접기' : '더 보기'}</button>}
  </div>;
  return <article className={'feed-card ' + (p.sample ? 'sample-card' : '')} id={detail ? undefined : 'post-' + p.id} data-post-id={p.id}>
-  <header className="post-top"><button className="person-button" onClick={onProfile}><span className="social-avatar">{author.emoji}</span><span><strong>{author.name}</strong><small>{p.sample ? '화면 체험용 예시' : ago}{p.ai ? ' · AI로 만든 콘텐츠' : ''}</small></span></button>
+  <header className="post-top"><button className="person-button" onClick={onProfile}><span className="social-avatar">{author.emoji}</span><span><strong>{author.name}</strong><small>{p.sample ? '화면 체험용 예시' : ago}{p.edited ? ' · 수정됨' : ''}{p.ai ? ' · AI로 만든 콘텐츠' : ''}</small></span></button>
    {!p.sample && p.user !== me && <button className="follow-mini" disabled={busy} onClick={onFollow}>{following ? '팔로잉' : '팔로우'}</button>}
    {!p.sample && <button className="icon-button" aria-label="게시물 메뉴" onClick={onMenu}><MoreHorizontal size={22}/></button>}
   </header>

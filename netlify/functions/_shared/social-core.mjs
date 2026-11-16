@@ -25,6 +25,14 @@ export function mutate(s,uid,a,now=Date.now()){
  if(s.posts.some(p=>p.user===uid&&now-p.created<15000))fail('새 게시물은 잠시 후 올려주세요.',429);
  const caption=text(a.caption,2200);if(!caption&&!a.media)fail('이야기나 사진을 넣어주세요.');
  s.posts.push({id:a.id,user:uid,caption,created:now,media:a.media||null,ai:!!a.ai});
+ }else if(a.action==='editPost'){
+ const p=post();if(p.user!==uid)fail('내 게시물만 수정할 수 있습니다.',403);
+ if(typeof a.caption!=='string'||a.caption.trim().length>2200)fail('게시글은 2,200자까지 입력해주세요.');
+ const caption=a.caption.trim();if(!caption&&!p.media)fail('이야기나 사진을 넣어주세요.');
+ // A lost response can be retried, but a stale editor must never overwrite a newer caption.
+ if(p.caption===caption)return s;
+ if(typeof a.expectedCaption!=='string'||a.expectedCaption!==p.caption)fail('다른 곳에서 먼저 수정했어요. 최신 게시글을 확인한 뒤 다시 수정해주세요.',409);
+ p.caption=caption;p.edited=now;
  }else if(a.action==='delete'){const p=post();if(p.user!==uid)fail('내 게시물만 삭제할 수 있습니다.',403);p.deleted=true;}
  else if(a.action==='like'){post();s.likes=s.likes.filter(v=>!(v.user===uid&&v.post===a.id));if(a.value===true)s.likes.push({user:uid,post:a.id,created:now});}
  else if(a.action==='comment'){post();const body=text(a.body,500);if(!body)fail('댓글을 입력해주세요.');if(s.comments.length>=3000)fail('테스트 댓글 한도에 도달했습니다.',429);if(!/^[a-f0-9-]{36}$/.test(a.requestId||''))fail('댓글 요청 번호가 올바르지 않습니다.');if(!s.comments.some(c=>c.id===a.requestId))s.comments.push({id:a.requestId,post:a.id,user:uid,body,created:now});}
