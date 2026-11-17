@@ -13,7 +13,7 @@
   "appIdentifier": "registered-and-visible-in-Apple-Developer",
   "appStoreConnectRecord": "prepare-for-submission",
   "appStoreConnectAppId": "6835965836",
-  "xcodeBuild": "GitHub-Actions-workflow-prepared-not-yet-run",
+  "xcodeBuild": "GitHub-Actions-queued-awaiting-macOS-runner",
   "xcodeCloud": "initial-project-onboarding-requires-Xcode-on-Mac",
   "testFlightUpload": "not-started",
   "appReviewSubmission": "not-submitted",
@@ -55,5 +55,17 @@
     "promotional-text",
     "copyright",
     "version-1.0.0"
-  ]
+  ],
+  "nativeCI": {
+    "provider": "GitHub Actions",
+    "runner": "macos-26",
+    "runId": 44126184330,
+    "jobId": 134190488470,
+    "sourceCommit": "49ca22a24eaca0f38f3282be2c8112fbafcc8e0a",
+    "url": "https://github.com/bidomoon/jini-voicegram/actions/runs/44126184330",
+    "status": "queued",
+    "conclusion": null,
+    "signingCredentialsUsed": false,
+    "installableIPAProduced": false
+  }
 }

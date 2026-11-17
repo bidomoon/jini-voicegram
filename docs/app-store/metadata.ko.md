@@ -15,7 +15,8 @@
 | 앱 식별자 | Apple Developer 등록 완료 |
 | App Store Connect 앱 레코드 | 6835965836 · 1.0.0 제출 준비 중 |
 | 출시 방식 | 수동 출시 |
-| 빌드·TestFlight·심사 | 미실행 |
+| 네이티브 빌드 | GitHub Actions 첫 실행 대기, 통과 여부 미확인 |
+| TestFlight·심사 | 미실행 |
 | 요금 | 첫 버전 기본 SNS 무료, 유료 상품 등록 전 |
 
 ## 저장한 홍보 문구
@@ -47,3 +48,5 @@
 앱 페이지: https://appstoreconnect.apple.com/apps/6835965836/distribution
 
 Xcode Cloud 첫 프로젝트 연결은 Mac의 Xcode에서 해야 한다. 기존 지니캡의 Cloud 제품은 변경하지 않았다. 공개 GitHub 저장소의 표준 macOS 26 Actions 작업으로 서명 없는 시뮬레이터 빌드·네이티브 테스트를 검증하도록 준비했다. Apple 인증서·API 비밀 키는 이 작업에 사용하지 않는다.
+
+현재의 단계별 완료 증거와 남은 작업은 [출시 상태](release-status.md)에 기록한다.
