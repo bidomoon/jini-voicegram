@@ -53,3 +53,13 @@ next-env.d.ts
 
 # Rebuilt from a small synthetic MP4 with a valid padding box.
 /public/checks/large-video.mp4
+
+# Local Apple build output and signing material.
+/ios/**/xcuserdata/
+/ios/**/DerivedData/
+/ios/**/*.xcuserstate
+/ios/**/*.xcarchive/
+*.ipa
+*.mobileprovision
+*.p12
+*.p8

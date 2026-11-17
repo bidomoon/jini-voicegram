@@ -1,0 +1,31 @@
+{
+  "checkedDateKorea": "2026-11-17",
+  "appName": "보이스그램",
+  "bundleIdentifier": "kr.jiniteam.voicegram",
+  "appleDeveloperDescription": "VOICEGRAM",
+  "developmentTeam": "5H4Z8667H6",
+  "sku": "JINITEAM-VOICEGRAM-IOS",
+  "primaryLocale": "ko-KR",
+  "marketingVersion": "1.0.0",
+  "minimumIOSVersion": "17.0",
+  "project": "ios/Voicegram/Voicegram.xcodeproj",
+  "scheme": "Voicegram",
+  "appIdentifier": "registered-and-visible-in-Apple-Developer",
+  "appStoreConnectRecord": "blocked-by-sign-in",
+  "appStoreConnectAppId": null,
+  "xcodeBuild": "not-run-linux-environment",
+  "xcodeCloud": "not-configured-for-this-app",
+  "testFlightUpload": "not-started",
+  "appReviewSubmission": "not-submitted",
+  "paidProducts": "not-configured",
+  "verification": {
+    "webAndServerAutomatedTests": 65,
+    "typecheck": "passed",
+    "webProductionBuild": "passed",
+    "xcodeProjectStructureAndReferences": "parsed-no-broken-references",
+    "plistPrivacyManifestAndSharedScheme": "parsed",
+    "nativeSwiftCompile": "not-run",
+    "nativeUnitTestsOnAppleSDK": "not-run",
+    "realIPhoneMicrophoneCameraAndSharing": "not-run"
+  }
+}
