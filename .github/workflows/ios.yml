@@ -1,0 +1,65 @@
+name: iOS build and tests
+
+on:
+  push:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    # Standard public-repository runner; no paid larger runner or signing secrets.
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Report Apple SDK and available simulators
+        run: |
+          xcodebuild -version
+          xcrun simctl list devices available
+      - name: Compile the iOS application without signing
+        run: |
+          xcodebuild -project ios/Voicegram/Voicegram.xcodeproj \
+            -scheme Voicegram -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build
+      - name: Select an installed iPhone simulator
+        run: |
+          xcrun simctl list devices available -j > "$RUNNER_TEMP/voicegram-simulators.json"
+          python3 - <<'PY'
+          import json, os
+          with open(os.path.join(os.environ['RUNNER_TEMP'], 'voicegram-simulators.json')) as file:
+              devices = json.load(file)['devices']
+          for runtime, entries in sorted(devices.items(), reverse=True):
+              if '.iOS-' not in runtime:
+                  continue
+              for device in entries:
+                  if device.get('isAvailable') and device['name'].startswith('iPhone'):
+                      with open(os.environ['GITHUB_ENV'], 'a') as file:
+                          file.write('VOICEGRAM_SIMULATOR=' + device['udid'] + '\n')
+                      print(runtime, device['name'], device['udid'])
+                      raise SystemExit(0)
+          raise SystemExit('No available iPhone simulator runtime found')
+          PY
+      - name: Run native bridge policy tests on the Apple SDK
+        run: |
+          xcodebuild -project ios/Voicegram/Voicegram.xcodeproj \
+            -scheme Voicegram -configuration Debug \
+            -destination "platform=iOS Simulator,id=$VOICEGRAM_SIMULATOR" \
+            -parallel-testing-enabled NO \
+            -resultBundlePath "$RUNNER_TEMP/Voicegram.xcresult" \
+            CODE_SIGNING_ALLOWED=NO test

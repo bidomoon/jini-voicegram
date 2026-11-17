@@ -1,5 +1,5 @@
 {
-  "checkedDateKorea": "2026-11-17",
+  "checkedDateKorea": "2026-11-18",
   "appName": "보이스그램",
   "bundleIdentifier": "kr.jiniteam.voicegram",
   "appleDeveloperDescription": "VOICEGRAM",
@@ -11,10 +11,10 @@
   "project": "ios/Voicegram/Voicegram.xcodeproj",
   "scheme": "Voicegram",
   "appIdentifier": "registered-and-visible-in-Apple-Developer",
-  "appStoreConnectRecord": "blocked-by-sign-in",
-  "appStoreConnectAppId": null,
-  "xcodeBuild": "not-run-linux-environment",
-  "xcodeCloud": "not-configured-for-this-app",
+  "appStoreConnectRecord": "prepare-for-submission",
+  "appStoreConnectAppId": "6835965836",
+  "xcodeBuild": "GitHub-Actions-workflow-prepared-not-yet-run",
+  "xcodeCloud": "initial-project-onboarding-requires-Xcode-on-Mac",
   "testFlightUpload": "not-started",
   "appReviewSubmission": "not-submitted",
   "paidProducts": "not-configured",
@@ -43,5 +43,17 @@
     "sourceCommit": "1784de9661a3fa91c3f30c26067425bb084bf805",
     "state": "ready",
     "publishedAtUTC": "2026-11-17T15:11:50.499Z"
-  }
+  },
+  "appStoreConnectURL": "https://appstoreconnect.apple.com/apps/6835965836/distribution",
+  "releaseMode": "manual",
+  "metadataSaved": [
+    "name",
+    "subtitle",
+    "primary-category",
+    "description",
+    "keywords",
+    "promotional-text",
+    "copyright",
+    "version-1.0.0"
+  ]
 }

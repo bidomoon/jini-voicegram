@@ -1,6 +1,6 @@
 # App Store Connect 입력 초안
 
-작성일: 2026-11-17. 앱 레코드 생성·심사 제출 전 검토용이며 공개 게시 완료가 아니다.
+확인일: 2026-11-18 (한국). App Store Connect 앱 레코드와 아래 기본 메타데이터를 저장했다. 심사 제출·공개 출시는 완료하지 않았다.
 
 | 항목 | 입력값 또는 상태 |
 | --- | --- |
@@ -10,18 +10,19 @@
 | Bundle ID | kr.jiniteam.voicegram |
 | SKU | JINITEAM-VOICEGRAM-IOS |
 | 버전 | 1.0.0 |
-| 주요 카테고리 초안 | 소셜 네트워킹 |
-| 부제 초안 | 말로 적고 함께 나누는 일상 |
+| 주요 카테고리 | 소셜 네트워킹 |
+| 부제 | 말로 기록하고 사진과 영상으로 나누는 일상 |
 | 앱 식별자 | Apple Developer 등록 완료 |
-| App Store Connect 앱 레코드 | 재로그인 필요, 아직 생성하지 못함 |
+| App Store Connect 앱 레코드 | 6835965836 · 1.0.0 제출 준비 중 |
+| 출시 방식 | 수동 출시 |
 | 빌드·TestFlight·심사 | 미실행 |
 | 요금 | 첫 버전 기본 SNS 무료, 유료 상품 등록 전 |
 
-## 홍보 문구 초안
+## 저장한 홍보 문구
 
 말로 적고, 확인하고, 함께 나누는 일상. 사진과 영상에 내 이야기를 더해보세요.
 
-## 설명 초안
+## 설명 구성
 
 보이스그램은 말이나 글로 내 이야기를 작성하고 사진·영상과 함께 나누는 일상 공유 앱입니다.
 
@@ -42,3 +43,7 @@
 - https://developer.apple.com/app-store/review/guidelines/
 - https://developer.apple.com/documentation/speech/asking-permission-to-use-speech-recognition
 - https://developer.apple.com/documentation/xcode/writing-custom-build-scripts
+
+앱 페이지: https://appstoreconnect.apple.com/apps/6835965836/distribution
+
+Xcode Cloud 첫 프로젝트 연결은 Mac의 Xcode에서 해야 한다. 기존 지니캡의 Cloud 제품은 변경하지 않았다. 공개 GitHub 저장소의 표준 macOS 26 Actions 작업으로 서명 없는 시뮬레이터 빌드·네이티브 테스트를 검증하도록 준비했다. Apple 인증서·API 비밀 키는 이 작업에 사용하지 않는다.
