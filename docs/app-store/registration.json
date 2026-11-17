@@ -26,6 +26,22 @@
     "plistPrivacyManifestAndSharedScheme": "parsed",
     "nativeSwiftCompile": "not-run",
     "nativeUnitTestsOnAppleSDK": "not-run",
-    "realIPhoneMicrophoneCameraAndSharing": "not-run"
+    "realIPhoneMicrophoneCameraAndSharing": "not-run",
+    "webBrowserPhotoPost": "passed-in-isolated-selftest-and-loaded-after-page-reload",
+    "webBrowserSampleVideo": {
+      "bytes": 7000000,
+      "durationSeconds": 2,
+      "paddedSyntheticFixture": true,
+      "posted": true,
+      "playedToEnd": true,
+      "error": null,
+      "countAfterPageReload": 1
+    }
+  },
+  "webBridgeDeployment": {
+    "id": "6afc6e95c47ca73a2944bedb",
+    "sourceCommit": "1784de9661a3fa91c3f30c26067425bb084bf805",
+    "state": "ready",
+    "publishedAtUTC": "2026-11-17T15:11:50.499Z"
   }
 }
