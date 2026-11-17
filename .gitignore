@@ -50,3 +50,6 @@ next-env.d.ts
 
 /dist-netlify/
 /.netlify/
+
+# Rebuilt from a small synthetic MP4 with a valid padding box.
+/public/checks/large-video.mp4

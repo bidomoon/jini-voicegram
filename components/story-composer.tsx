@@ -43,6 +43,18 @@ export default function Studio({onPublish,onClose,entryMode,active,starter,draft
  async function upload(f?:File){if(!f)return;if(!['image/jpeg','image/png','image/webp'].includes(f.type)||f.size>10*1024*1024){message('10MB 이하의 JPG, PNG, WebP 사진을 선택해주세요. HEIC는 JPG로 변환해주세요.',true);return;}const seq=++applyPhoto.current;try{const url=URL.createObjectURL(f);try{const im=await loadImage(url);if(!im)throw Error();const c=document.createElement('canvas');const scale=Math.min(1,2048/Math.max(im.width,im.height));c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d')!.drawImage(im,0,0,c.width,c.height);if(seq===applyPhoto.current){setMotionPlan(null);if(kind==='text'){setKind('image');setSource('photo');}publicationId.current=crypto.randomUUID();setDesign(d=>({...d,photo:c.toDataURL('image/jpeg',.9)}));setAiMade(false);setJob(null);setReferencePhoto(true);if(kind==='video'&&videoMode==='ai')setSource('ai');message(kind==='video'?'움직일 사진을 넣었어요. 동작과 길이를 골라주세요.':'사진을 넣었습니다. 문구와 분위기를 바꿔보세요.');}}finally{URL.revokeObjectURL(url);}}catch{message('사진을 읽지 못했습니다. 다른 사진을 선택해주세요.',true);}}
  voiceCaption.current=caption;
  async function attachVideo(f?:File){if(!f)return;const type=f.type.split(';')[0]||(/\.mov$/i.test(f.name)?'video/quicktime':/\.mp4$/i.test(f.name)?'video/mp4':/\.webm$/i.test(f.name)?'video/webm':'');if(!['video/mp4','video/webm','video/quicktime'].includes(type)||f.size>20000000||f.size<12){message('20MB 이하의 MP4·MOV·WebM 영상을 선택해주세요.',true);return;}setKind('video');setVideoMode('upload');setSource('photo');setJob(null);setMotionPlan(null);setRequest(null);setFile(new Blob([f],{type}));setAiMade(false);setStep(1);setRecordCamera(false);publicationId.current=crypto.randomUUID();message('영상을 넣었어요. 함께 올릴 글을 말한 뒤 미리보기를 확인해주세요.');}
+ async function loadCheckAttachment(kind:'photo'|'video'){
+  if(!basicOnly||busyRef.current)return;
+  busyRef.current=true;setBusy(true);
+  try{
+   const path=kind==='photo'?'/visuals/quiet-sea.webp':'/checks/large-video.mp4';
+   const r=await fetch(path);if(!r.ok)throw Error('점검용 파일을 가져오지 못했어요.');
+   const b=await r.blob();
+   if(kind==='photo'){await upload(new File([b],'점검사진.webp',{type:'image/webp'}));selectKind('image');setStep(1);}
+   else await attachVideo(new File([b],'점검영상.mp4',{type:'video/mp4'}));
+  }catch(e){message(e instanceof Error?e.message:'점검용 첨부를 준비하지 못했어요.',true);}
+  finally{busyRef.current=false;setBusy(false);}
+ }
  function rememberCaption(next:string){if(next.length>2200){message('게시글은 2,200자까지 적을 수 있어요. 방금 말은 추가하지 않았어요.',true);return;}voiceHistory.current=[...voiceHistory.current.slice(-19),voiceCaption.current];voiceCaption.current=next;setCaption(next);setLiteralText(true);setStep(1);message('말씀하신 내용을 게시글에 반영했어요.');}
  function readCaption(){if(!caption.trim()){message('먼저 이야기를 말하거나 입력해주세요.');return;}if(!window.speechSynthesis){message('이 브라우저에서는 글 듣기를 지원하지 않아요.',true);return;}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(caption);u.lang='ko-KR';window.speechSynthesis.speak(u);}
  useEffect(()=>{if(!active){setRecordCamera(false);window.speechSynthesis?.cancel();}return()=>window.speechSynthesis?.cancel();},[active]);
@@ -96,6 +108,7 @@ export default function Studio({onPublish,onClose,entryMode,active,starter,draft
  return <div className="compose-page">
  <header className="compose-header"><button className="icon-button" onClick={onClose} aria-label="피드로 돌아가기">←</button><h1>{step===1?'새 이야기':'게시 전 확인'}</h1><button className="text-button" onClick={saveDraft}>임시 저장</button></header>
  <p className="draft-save-status" role="status">{saveStatus||'작성 내용은 이 기기에 임시 저장돼요.'}</p><fieldset className="compose-fieldset" disabled={!draftReady||busy||publishing}><div className="compose-steps"><button aria-current={step===1?'step':undefined} onClick={()=>setStep(1)}>1 이야기하기</button><ChevronRight size={16}/><button aria-current={step===2?'step':undefined} disabled={busy||!canPreview||(kind==='video'&&videoMode==='ai'&&source==='ai'&&!aiReady)} onClick={preview}>2 확인하고 게시</button></div>
+ {basicOnly&&step===1&&<section className="verification-fixtures" aria-label="점검용 첨부"><p>공용 시험 파일로 전송·저장·재생을 확인해요. 내 파일 선택은 아래에서 이용할 수 있어요.</p><button type="button" className="secondary" onClick={()=>void loadCheckAttachment('photo')}>점검 사진 넣기</button><button type="button" className="secondary" onClick={()=>void loadCheckAttachment('video')}>점검 영상 넣기 · 약 7MB</button></section>}
  {(mode==='voice'||step===2)&&<VoiceStoryControl active={active&&!dialog} disabled={!draftReady||busy||publishing||recordCamera} review={step===2} onCommand={onVoice} onRead={readCaption}/>}
  <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={e=>{void upload(e.target.files?.[0]);e.target.value='';}}/><input ref={videoInput} type="file" accept="video/mp4,video/webm,video/quicktime" hidden onChange={e=>{void attachVideo(e.target.files?.[0]);e.target.value='';}}/>
  <div className={step===1?'compose-edit':'compose-edit is-hidden'}>
