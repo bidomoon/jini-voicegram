@@ -31,6 +31,8 @@ jobs:
         run: |
           xcodebuild -version
           xcrun simctl list devices available
+      - name: Validate Xcode project syntax
+        run: plutil -lint ios/Voicegram/Voicegram.xcodeproj/project.pbxproj
       - name: Compile the iOS application without signing
         run: |
           xcodebuild -project ios/Voicegram/Voicegram.xcodeproj \
