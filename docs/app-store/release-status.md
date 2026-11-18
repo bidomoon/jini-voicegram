@@ -15,7 +15,7 @@
 
 첫 네이티브 검증: https://github.com/bidomoon/jini-voicegram/actions/runs/44126184330
 
-현재 확인 상태는 Mac 러너 배정 대기(`queued`)다. 아직 Swift 컴파일·네이티브 테스트 통과 결과는 없다.
+첫 실행은 프로젝트 파일 파싱 오류로 실패했고 Swift 컴파일·네이티브 테스트에 도달하지 못했다. DEBUG=1 빌드 설정 문자열의 따옴표를 수정해 다음 실행으로 재검증한다. 새 Apple SDK 빌드 통과·TestFlight 업로드를 완료했다고 간주하지 않는다.
 
 ## 남은 단계와 완료 증거
 

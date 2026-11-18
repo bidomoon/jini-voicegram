@@ -5,8 +5,8 @@ export const generationStore=()=>getStore({name:'voicegram-generation-v1',consis
 const hash=value=>createHash('sha256').update(value).digest('hex');
 export const validRequestId=id=>/^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(id||'');
 const keyFor=(auth,id)=>'requests/'+hash(String(auth.nonce||auth.exp))+'/'+id;
-export async function generationFingerprint({prompt,kind,ratio,photo,duration,motion,caption,planId}) {
- return hash(JSON.stringify({prompt,kind,ratio,photo:photo?hash(Buffer.from(await photo.arrayBuffer())):null,...(['video','video-plan'].includes(kind)?{duration,motion,caption:caption||'',planId:planId||null}:{})}));
+export async function generationFingerprint({prompt,kind,ratio,photo,duration,motion,caption,planId,providerSignature}) {
+ return hash(JSON.stringify({prompt,kind,ratio,...(providerSignature?{providerSignature}:{}),photo:photo?hash(Buffer.from(await photo.arrayBuffer())):null,...(['video','video-plan'].includes(kind)?{duration,motion,caption:caption||'',planId:planId||null}:{})}));
 }
 export async function completedGeneration(store,auth,id,fingerprint){
  if(!validRequestId(id))return null;
