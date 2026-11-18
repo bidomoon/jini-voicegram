@@ -46,3 +46,7 @@
 - 한국 Sign in with Apple 서버 알림: https://developer.apple.com/news/?id=j9zukcr6
 
 2026-11-18 추가 확인: 프로젝트 문자열 수정 뒤 새 iOS CI 실행 44225816547이 in_progress로 Apple SDK 빌드를 진행 중이다. 이전 실패 실행과 새 실행의 결과를 구분한다. 이미지 웹 연결부는 Netlify ready 배포 6afd11c547e9ef3a83e27dfa로 게시됐다.
+
+## 확인 갱신 — 2026-11-18
+
+GitHub Actions 실행 44225816547 / 작업 134538599400을 API로 다시 조회하여 completed / success를 확인했다. Apple SDK의 서명 없는 iOS Simulator 컴파일과 네이티브 브리지 테스트 단계가 각각 success이다. 검증 소스는 9d80318110f02406f6e242085c3fb687fe58adb6이다. 위 본문의 대기 기록은 과거 상태이며 이 확인이 최신이다. 서명된 IPA 생성·TestFlight 업로드·실제 아이폰 검증·심사 제출은 여전히 미완료다.

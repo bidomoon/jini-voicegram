@@ -1,7 +1,11 @@
-export async function finalizeClosedAccount(store,uid){
+export async function finalizeClosedAccount(store,uid,{purgeSessions=false,deadline=Date.now()+3000}={}){
  const ref=await store.get('providers/'+uid,{type:'json'});
  if(ref?.identityKey&&/^identities\/[a-f0-9]{64}$/.test(ref.identityKey))await store.delete(ref.identityKey);
  await store.delete('providers/'+uid);await store.delete('unlinked/'+uid);
+ if(purgeSessions)for await(const page of store.list({prefix:'sessions/',paginate:true}))for(const {key}of page.blobs){
+  if(Date.now()>deadline)throw Error('Account session cleanup remains pending');
+  const session=await store.get(key,{type:'json'});if(session?.uid===uid)await store.delete(key);
+ }
 }
 export async function cleanAccounts(store,{deadline=Date.now()+5000,limit=100}={}){
  let checked=0,removed=0;
