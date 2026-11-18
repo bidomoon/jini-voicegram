@@ -27,3 +27,9 @@
 - https://developers.openai.com/api/docs/guides/image-generation
 
 배포·실기기·정식 가입·스토어 심사는 별도 증거로 확인한다.
+
+## 배포 확인
+
+GitHub main의 9d80318110f02406f6e242085c3fb687fe58adb6가 Netlify 배포 6afd11c547e9ef3a83e27dfa에 반영됐고, ready 및 2026-11-18T02:48:00.240Z 게시 상태를 확인했다. 운영 URL은 https://jini-voicegram.netlify.app 이다.
+
+iOS 재검증 https://github.com/bidomoon/jini-voicegram/actions/runs/44225816547 은 확인 시점에 in_progress였다. 통과·실패가 확정되지 않았으며 TestFlight·심사 제출 완료가 아니다.

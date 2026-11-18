@@ -32,7 +32,7 @@
 
 카카오를 일반 회원의 주요 로그인으로 제공할 때는 Apple 심사 지침 4.8에 맞는 동등한 로그인 선택지를 준비한다. 웹과 연계한 Sign in with Apple의 Services ID를 한국 개발자가 등록·갱신할 경우 서버 간 계정 알림 엔드포인트 요건도 적용한다. 가입·탈퇴·토큰 폐기를 함께 검증해야 한다.
 
-첫 iOS 버전의 AI 유료 생성·토스 운영자 결제 시험은 제외했다. 향후 버전의 기능은 해당 버전의 심사 정보와 실제 동작을 일치시킨다.
+첫 iOS 버전의 유료 상품 판매·토스 운영자 결제 시험은 제외했다. AI 이미지 생성 진입은 이번 초대형 베타에서 연결했으며 실제 iPhone 검증과 심사 조건을 확인한 뒤 제출 범위를 확정한다. AI 영상 생성은 후속 단계로 둔다.
 
 ## 확인한 공식 기준
 
@@ -44,3 +44,5 @@
 - 현재 앱 심사 기준: https://developer.apple.com/app-store/review/guidelines/
 - 2026-10-16 사용자 생성 콘텐츠 관리 기준 보강: https://developer.apple.com/news/?id=92th7e5i
 - 한국 Sign in with Apple 서버 알림: https://developer.apple.com/news/?id=j9zukcr6
+
+2026-11-18 추가 확인: 프로젝트 문자열 수정 뒤 새 iOS CI 실행 44225816547이 in_progress로 Apple SDK 빌드를 진행 중이다. 이전 실패 실행과 새 실행의 결과를 구분한다. 이미지 웹 연결부는 Netlify ready 배포 6afd11c547e9ef3a83e27dfa로 게시됐다.
