@@ -44,9 +44,37 @@ test('delayed account cleanup preserves media if the object now belongs to someb
  const store=memoryStore(),s=empty(),id=randomUUID();s.closed={a:{at:1,media:[id]}};await store.setJSON('community',s);await store.set('media/'+id,new Uint8Array([9]).buffer,{metadata:{user:'b'}});await purgeClosedMedia(store);assert.ok(await store.get('media/'+id));assert.equal((await store.get('community')).closed.a.media.length,0);
 });
 async function kakaoFixture(){const store=memoryStore(),accounts=memoryStore(),account=await providerAccount(accounts,'app-1','123456'),token=opaque(),s=empty();mutate(s,account.uid,{action:'profile',name:'카카오 이웃'});await store.setJSON('community',s);await accounts.setJSON('sessions/'+hash(token),{uid:account.uid,provider:'kakao',exp:Date.now()+3600000});return {store,accounts,account,token};}
+test('deletion availability distinguishes a missing provider connection without mutating the account or exposing secrets',async()=>{
+ const {store,accounts,account,token}=await kakaoFixture();let ready=false,calls=0;
+ const handler=createPrivacyHandler({socialFactory:()=>store,accountsFactory:()=>accounts,read:()=>ready?'test-secret-that-must-not-be-returned':undefined,request:async()=>{calls++;throw Error('status must not unlink');}});
+ const unavailable=await handler(req('/api/privacy?status=1',{token}));assert.equal(unavailable.status,200);
+ const detail=await unavailable.json();assert.equal(detail.canDelete,false);assert.equal(detail.reason,'provider-unlink-unavailable');assert.ok(detail.message);assert.ok(!JSON.stringify(detail).includes('test-secret'));
+ ready=true;assert.equal((await (await handler(req('/api/privacy?status=1',{token}))).json()).canDelete,true);
+ assert.equal(calls,0);assert.ok((await store.get('community')).profiles[account.uid]);assert.equal(await accounts.get('closed/'+account.uid),null);
+ const tester=await handler(req('/api/privacy?status=1',{uid:randomUUID()}));assert.equal((await tester.json()).canDelete,true);
+ assert.equal((await handler(req('/api/privacy?status=1'))).status,401);
+});
 test('Kakao deletion unlinks only the server-owned provider ID, revokes all sessions, and removes provider identifiers',async()=>{
  const {store,accounts,account,token}=await kakaoFixture();let calls=0;const handler=createPrivacyHandler({socialFactory:()=>store,accountsFactory:()=>accounts,read:k=>k==='KAKAO_ADMIN_KEY'?'test-admin-key':undefined,request:async(url,options)=>{calls++;assert.equal(url,'https://kapi.kakao.com/v1/user/unlink');assert.equal(options.body.get('target_id'),'123456');return Response.json({id:123456});}});
  const result=await handler(req('/api/privacy',{token,body:{action:'closeAccount',confirm:'내 계정 삭제',requestId:randomUUID(),providerId:'another-user'}}));assert.equal(result.status,200);assert.equal(calls,1);assert.equal(await accountSession(req('/',{token}),accounts),null);assert.equal(await accounts.get('providers/'+account.uid),null);assert.notEqual((await providerAccount(accounts,'app-1','123456')).uid,account.uid);
+});
+test('deletion removes every session for the closed account while preserving other accounts',async()=>{
+ const {store,accounts,account,token}=await kakaoFixture(),other=randomUUID();
+ await accounts.setJSON('sessions/second-device',{uid:account.uid,provider:'kakao',exp:Date.now()+60000});
+ await accounts.setJSON('sessions/other-person',{uid:other,provider:'kakao',exp:Date.now()+60000});
+ const handler=createPrivacyHandler({socialFactory:()=>store,accountsFactory:()=>accounts,read:()=> 'test-key',request:async()=>Response.json({id:123456})});
+ const response=await handler(req('/api/privacy',{token,body:{action:'closeAccount',confirm:'내 계정 삭제',requestId:randomUUID()}}));
+ assert.equal(response.status,200);assert.equal((await response.json()).accountCleanupPending,false);
+ assert.equal(await accounts.get('sessions/'+hash(token)),null);assert.equal(await accounts.get('sessions/second-device'),null);assert.equal((await accounts.get('sessions/other-person')).uid,other);
+});
+test('failed session removal reports pending cleanup and the closed account stays inaccessible until maintenance finishes',async()=>{
+ const {store,accounts,account,token}=await kakaoFixture(),remove=accounts.delete.bind(accounts);let failed=true;
+ accounts.delete=async key=>{if(failed&&key==='sessions/'+hash(token))throw Error('temporary failure');return remove(key);};
+ const handler=createPrivacyHandler({socialFactory:()=>store,accountsFactory:()=>accounts,read:()=> 'test-key',request:async()=>Response.json({id:123456})});
+ const response=await handler(req('/api/privacy',{token,body:{action:'closeAccount',confirm:'내 계정 삭제',requestId:randomUUID()}}));
+ assert.equal(response.status,200);const result=await response.json();assert.equal(result.closed,true);assert.equal(result.accountCleanupPending,true);
+ assert.equal(await accountSession(req('/',{token}),accounts),null);assert.ok(await accounts.get('sessions/'+hash(token)));
+ failed=false;await cleanAccounts(accounts);assert.equal(await accounts.get('sessions/'+hash(token)),null);
 });
 test('missing or uncertain provider unlink never reports deletion or removes the community profile',async()=>{
  for(const mode of ['missing','wrong-response','timeout']){const {store,accounts,account,token}=await kakaoFixture(),handler=createPrivacyHandler({socialFactory:()=>store,accountsFactory:()=>accounts,read:()=>mode==='missing'?undefined:'test-key',request:async()=>{if(mode==='timeout')throw Error('timeout');return Response.json({id:999});}}),r=await handler(req('/api/privacy',{token,body:{action:'closeAccount',confirm:'내 계정 삭제',requestId:randomUUID()}}));assert.ok(r.status>=500);assert.ok((await store.get('community')).profiles[account.uid]);assert.equal((await store.get('community')).closed,undefined);}

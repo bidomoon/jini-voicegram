@@ -10,7 +10,11 @@ export function createPrivacyHandler({socialFactory=communityStore,secondaryFact
  if(!['GET','POST'].includes(req.method))return json({error:'지원하지 않는 요청입니다.'},405);
  const accounts=accountsFactory(),identity=await communityIdentity(req,accounts,context),s=socialFactory();
  if(req.method==='GET'){
- if(new URL(req.url).searchParams.get('status')==='1'){const ref=identity.provider==='kakao'?await accounts.get('providers/'+identity.uid,{type:'json'}):null;return json({canDelete:identity.provider!=='kakao'||!!(read('KAKAO_ADMIN_KEY')&&ref?.providerId)});}
+ if(new URL(req.url).searchParams.get('status')==='1'){
+ const ref=identity.provider==='kakao'?await accounts.get('providers/'+identity.uid,{type:'json'}):null;
+ const canDelete=identity.provider!=='kakao'||!!(read('KAKAO_ADMIN_KEY')&&ref?.providerId);
+ return json({canDelete,...(!canDelete?{reason:'provider-unlink-unavailable',message:'현재 로그인 연결의 계정 삭제를 사용할 수 없어요. 연결 설정이 복구된 뒤 다시 확인해주세요.'}:{})});
+ }
  const state=await s.get('community',{type:'json'})||empty();
  const data=ownRecords(state,identity.uid);if(secondaryFactory&&identity.provider==='netlify'){const secondary=await secondaryFactory().get('community',{type:'json'});if(secondary&&!secondary.closed?.[identity.uid])data.verificationRecords=ownRecords(secondary,identity.uid);}const r=json(data);r.headers.set('Content-Disposition','attachment; filename="voicegram-my-records.json"');return r;
  }
@@ -21,7 +25,7 @@ export function createPrivacyHandler({socialFactory=communityStore,secondaryFact
  const stores=[s,...(secondaryFactory?[secondaryFactory()]:[])];
  for(const space of stores){const current=await space.get('community',{type:'json'});if(!current?.closed?.[identity.uid])await update(space,identity.uid,{action:'closeAccount',confirm:a.confirm,requestId:a.requestId});}
  let accountCleanupPending=false;
- if(identity.provider!=='tester'){await accounts.setJSON('closed/'+identity.uid,{at:Date.now()},{onlyIfNew:true});try{await finalizeClosedAccount(accounts,identity.uid);}catch{accountCleanupPending=true;}}
+ if(identity.provider!=='tester'){await accounts.setJSON('closed/'+identity.uid,{at:Date.now()},{onlyIfNew:true});try{await finalizeClosedAccount(accounts,identity.uid,{purgeSessions:true});}catch{accountCleanupPending=true;}}
  let pending=false;for(const space of stores){try{await purgeClosedMedia(space,{limit:5,deadline:Date.now()+2500});pending=!!(await space.get('community',{type:'json'}))?.closed?.[identity.uid]?.media?.length||pending;}catch{pending=true;}}
  const r=json({closed:true,mediaCleanupPending:pending,accountCleanupPending});for(const name of ['vg_account','vg_session','vg_person'])r.headers.append('Set-Cookie',cookieHeader(name,'',0));return r;
  }catch(e){return json({error:e.status?e.message:'처리 결과를 확인하지 못했어요. 다시 시도해주세요.'},e.status||503);}

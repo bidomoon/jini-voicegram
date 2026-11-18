@@ -1,12 +1,13 @@
 import {spawnSync} from 'node:child_process';
-import {writeFile,readFile} from 'node:fs/promises';
+import {writeFile,readFile,readdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const root=fileURLToPath(new URL('..',import.meta.url));
 function run(args){const r=spawnSync(process.execPath,args,{cwd:root,encoding:'utf8'});process.stdout.write(r.stdout||'');process.stderr.write(r.stderr||'');if(r.status!==0)throw Error('Release stopped: '+args.join(' '));return r.stdout;}
 run(['node_modules/typescript/bin/tsc','--noEmit']);
-const tests=run(['--test','--test-reporter=spec',...['account-billing','commercial','owner-selftest','login-draft','ios-native','seniorgram-integration','creation','generation','social-projection','social','video','voice-upload'].map(n=>'tests/'+n+'.test.mjs')]);
+const testFiles=(await readdir(path.join(root,'tests'))).filter(name=>name.endsWith('.test.mjs')).sort().map(name=>'tests/'+name);
+const tests=run(['--test','--test-reporter=spec',...testFiles]);
 run(['scripts/generate-checks.mjs']);
 run(['node_modules/vite/bin/vite.js','build','--config','vite.netlify.config.ts']);
 run(['scripts/package-netlify.mjs']);

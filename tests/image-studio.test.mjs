@@ -5,7 +5,7 @@ import {transformSync} from 'esbuild';
 import {randomUUID} from 'node:crypto';
 import {memoryStore} from './helpers/memory-store.mjs';
 const code=transformSync(readFileSync(new URL('../lib/image-studio.ts',import.meta.url),'utf8'),{loader:'ts',format:'esm'}).code;
-const {imageSamples,imageInstruction,validImageChoices}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+const {imageSamples,imageInstruction,imageSelectionTarget,validImageChoices}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
 test('numbered sample, caption and overlay commands are explicit; ordinary stories stay literal',()=>{
  assert.deepEqual(imageInstruction('1번 이미지가 좋다'),{action:'pick',index:0});
  assert.deepEqual(imageInstruction('삼 번 이미지 적용해줘'),{action:'pick',index:2});
@@ -16,6 +16,20 @@ test('numbered sample, caption and overlay commands are explicit; ordinary stori
  assert.deepEqual(imageInstruction('대상을 사람으로 바꿔줘'),{action:'edit',prompt:'대상을 사람으로 바꿔줘'});
  for(const value of ['“1번 이미지 적용해줘”','친구가 1번 이미지가 좋다고 했어요','문구는 생일 축하해로 넣어줘라는 말을 들었다','오늘 2번 문구를 읽었어요','게시 확정'])assert.equal(imageInstruction(value),null,value);
  assert.equal(imageSamples.length,4);for(const sample of imageSamples){assert.ok(sample.src.startsWith('/visuals/'));assert.ok(sample.caption&&sample.prompt);}
+});
+test('spoken choices identify the same sample or completed result as their labelled buttons',()=>{
+ for(const phrase of ['샘플 1번 적용','1번 샘플 이미지 적용해줘','샘플 일 번 이미지 선택해주세요'])assert.deepEqual(imageInstruction(phrase),{action:'pick',index:0,target:'sample'},phrase);
+ for(const phrase of ['완성 2번 선택','완성 이미지 이 번 적용','2번 완성 이미지 적용해줘','결과 2번 선택해줘'])assert.deepEqual(imageInstruction(phrase),{action:'pick',index:1,target:'result'},phrase);
+ assert.deepEqual(imageInstruction('완성 1번 이미지 적용하고 문구는 생일 축하해로 넣어줘'),{action:'pick',index:0,target:'result',overlay:'생일 축하해'});
+ const sample=imageInstruction('샘플 1번 적용'),result=imageInstruction('완성 1번 선택'),plain=imageInstruction('1번 이미지 적용해줘');
+ for(const review of [true,false])for(const samplesVisible of [true,false])for(const hasResults of [true,false]){
+  assert.equal(imageSelectionTarget(sample,{review,samplesVisible,hasResults}),'sample');
+  assert.equal(imageSelectionTarget(result,{review,samplesVisible,hasResults}),'result');
+ }
+ assert.equal(imageSelectionTarget(plain,{review:false,samplesVisible:true,hasResults:true}),'ambiguous');
+ assert.equal(imageSelectionTarget(plain,{review:true,samplesVisible:true,hasResults:true}),'result');
+ assert.equal(imageSelectionTarget(plain,{review:false,samplesVisible:true,hasResults:false}),'sample');
+ for(const phrase of ['친구가 완성 1번 선택이라고 말했다','“샘플 1번 적용”','샘플 1번 완성 이미지 선택'])assert.equal(imageInstruction(phrase),null);
 });
 test('only bounded local image results restore; old choices remain independently selectable',()=>{
  const choices=Array.from({length:5},(_,i)=>({id:'result-'+i,url:'data:image/jpeg;base64,Ynl0ZXM=',prompt:'scene '+i,created:i}));
