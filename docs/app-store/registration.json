@@ -19,7 +19,7 @@
   "appReviewSubmission": "not-submitted",
   "paidProducts": "not-configured",
   "verification": {
-    "webAndServerAutomatedTests": 78,
+    "webAndServerAutomatedTests": 88,
     "typecheck": "passed",
     "webProductionBuild": "passed",
     "xcodeProjectStructureAndReferences": "parsed-no-broken-references",
@@ -36,7 +36,9 @@
       "playedToEnd": true,
       "error": null,
       "countAfterPageReload": 1
-    }
+    },
+    "webReliabilityRegression": "passed-draft-order-empty-draft-retry-and-bounded-network-requests",
+    "webReliabilityBrowser": "pending-after-this-deployment"
   },
   "webBridgeDeployment": {
     "id": "6afd11c547e9ef3a83e27dfa",

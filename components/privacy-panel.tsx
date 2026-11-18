@@ -1,5 +1,6 @@
 'use client';
 import {saveIOSFile} from '@/lib/ios-native';
+import {requestJSON} from '@/lib/http';
 import {useEffect,useRef,useState} from 'react';
 import {Download,ShieldCheck} from 'lucide-react';
 
@@ -27,9 +28,8 @@ export default function PrivacyPanel({authenticated,onLogin,onClosed}:{authentic
   if(pending.current||confirm!=='내 계정 삭제'||readiness!=='ready')return;
   pending.current=true;setBusy(true);setError('');deletionId.current||=crypto.randomUUID();
   try{
-   const r=await fetch('/api/privacy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'closeAccount',confirm,requestId:deletionId.current})});
-   const d=await r.json() as {error?:string;closed?:boolean;mediaCleanupPending?:boolean;accountCleanupPending?:boolean};
-   if(!r.ok||d.closed!==true)throw Error(d.error||'삭제 결과를 확인하지 못했어요. 완료된 것으로 표시하지 않았어요.');
+   const d=await requestJSON<{error?:string;closed?:boolean;mediaCleanupPending?:boolean;accountCleanupPending?:boolean}>('/api/privacy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'closeAccount',confirm,requestId:deletionId.current})},{timeoutMs:65000,timeoutMessage:'계정 삭제 결과를 확인하지 못했어요. 이 화면에서 같은 삭제 요청을 다시 확인해주세요. 자동으로 재요청하지는 않아요.'});
+   if(d?.closed!==true)throw Error(d.error||'삭제 결과를 확인하지 못했어요. 완료된 것으로 표시하지 않았어요.');
    onClosed({mediaCleanupPending:!!d.mediaCleanupPending,accountCleanupPending:!!d.accountCleanupPending});
   }catch(e){setError(e instanceof Error?e.message:'삭제 결과를 확인하지 못했어요. 연결을 확인해주세요.');}
   finally{pending.current=false;setBusy(false);}
