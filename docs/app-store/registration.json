@@ -38,13 +38,34 @@
       "countAfterPageReload": 1
     },
     "webReliabilityRegression": "passed-draft-order-empty-draft-retry-and-bounded-network-requests",
-    "webReliabilityBrowser": "pending-after-this-deployment"
+    "webReliabilityBrowser": {
+      "sourceCommit": "d2bc6a2ca552d57a54d15dba4d4e752a9885c105",
+      "space": "isolated-selftest",
+      "draftAfterNavigateAndReload": "passed",
+      "emptiedDraftAfterReload": "passed-empty",
+      "sampleClickAndCaption": "passed",
+      "typedSampleCommandAndPreview": "passed",
+      "explicitTypedPublishCommand": "passed",
+      "publishedPostCountAfterReload": 1,
+      "likeAndCommentAfterReload": "passed",
+      "newComposerAfterPublish": "empty-preview-disabled",
+      "mobileViewport": {
+        "width": 390,
+        "height": 844,
+        "visualLayout": "passed",
+        "nativeDevice": false
+      },
+      "accountDeletionPreview": "confirmation-phrase-required-and-submit-disabled-with-empty-phrase",
+      "realAccountDeletion": "not-performed",
+      "microphoneRecognition": "not-tested",
+      "paidAIGeneration": "not-requested"
+    }
   },
   "webBridgeDeployment": {
-    "id": "6afd11c547e9ef3a83e27dfa",
-    "sourceCommit": "9d80318110f02406f6e242085c3fb687fe58adb6",
+    "id": "6afd92f627d8f2d3cd17cacd",
+    "sourceCommit": "d2bc6a2ca552d57a54d15dba4d4e752a9885c105",
     "state": "ready",
-    "publishedAtUTC": "2026-11-18T02:48:00.240Z"
+    "publishedAtUTC": "2026-11-18T11:59:20.666Z"
   },
   "appStoreConnectURL": "https://appstoreconnect.apple.com/apps/6835965836/distribution",
   "releaseMode": "manual",
@@ -81,5 +102,13 @@
     "conclusion": "failure",
     "signingCredentialsUsed": false,
     "installableIPAProduced": false
+  },
+  "webQualityCI": {
+    "runId": 44299559782,
+    "jobId": 134785435338,
+    "sourceCommit": "d2bc6a2ca552d57a54d15dba4d4e752a9885c105",
+    "state": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/bidomoon/jini-voicegram/actions/runs/44299559782"
   }
 }
