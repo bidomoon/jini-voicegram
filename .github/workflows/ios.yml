@@ -37,6 +37,13 @@ jobs:
             -scheme Voicegram -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO build
+      - name: Verify the Release archive for an iPhone without signing
+        run: |
+          xcodebuild -project ios/Voicegram/Voicegram.xcodeproj \
+            -scheme Voicegram -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Voicegram.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO archive
       - name: Select an installed iPhone simulator
         run: |
           xcrun simctl list devices available -j > "$RUNNER_TEMP/voicegram-simulators.json"

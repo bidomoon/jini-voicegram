@@ -63,6 +63,7 @@ private struct NativeComposer: View {
     @Environment(\.scenePhase) private var phase
     @State private var text = ""
     @State private var prefix = ""
+    @State private var draftLoaded = false
 
     var body: some View {
         NavigationStack {
@@ -82,6 +83,7 @@ private struct NativeComposer: View {
                 Section("내 초안 보관") {
                     Button("이 아이폰에 저장") { speech.cancel(); _ = drafts.save(text) }
                     Text(drafts.notice).font(.footnote)
+                    Text("입력을 잠시 멈추면 자동으로 저장해요.").font(.caption).foregroundStyle(.secondary)
                     Button("보이스그램에서 확인하고 게시") {
                         speech.cancel()
                         if drafts.save(text) { send(drafts.draft) }
@@ -94,7 +96,16 @@ private struct NativeComposer: View {
             }
             .navigationTitle("내 음성 초안")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("저장하고 닫기") { speech.cancel(); if drafts.save(text) { dismiss() } } } }
-            .onAppear { text = drafts.draft.caption }
+            .onAppear { text = drafts.draft.caption; draftLoaded = true }
+            .task(id: text) {
+                guard draftLoaded else { return }
+                let snapshot = text
+                do {
+                    try await Task.sleep(for: .milliseconds(400))
+                    try Task.checkCancellation()
+                    _ = drafts.save(snapshot)
+                } catch { /* A newer edit or closing the sheet cancels this save. */ }
+            }
             .onChange(of: speech.transcript) { _, result in
                 text = (prefix + (prefix.isEmpty ? "" : "\n") + result).voicegramLimited
             }

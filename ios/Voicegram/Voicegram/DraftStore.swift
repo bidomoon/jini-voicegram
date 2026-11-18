@@ -26,9 +26,8 @@ final class DraftStore: ObservableObject {
     private let file: URL
     private var needsRecovery = false
 
-    init() {
-        file = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("voicegram-draft.json")
+    init(directory: URL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]) {
+        file = directory.appendingPathComponent("voicegram-draft.json")
         if FileManager.default.fileExists(atPath: file.path) {
             do { draft = try JSONDecoder().decode(NativeDraft.self, from: Data(contentsOf: file)) }
             catch { needsRecovery = true; notice = "저장된 초안을 읽지 못했어요. 새 내용은 별도 파일에 보존합니다." }
@@ -37,7 +36,13 @@ final class DraftStore: ObservableObject {
 
     @discardableResult
     func save(_ caption: String) -> Bool {
-        let next = NativeDraft(caption: caption.voicegramLimited)
+        let limited = caption.voicegramLimited
+        // Repeated lifecycle saves must not turn the same draft into a new import.
+        if !needsRecovery, draft.caption == limited, FileManager.default.fileExists(atPath: file.path) {
+            notice = "이 아이폰에 초안을 저장했어요. 피드에는 아직 게시하지 않았어요."
+            return true
+        }
+        let next = NativeDraft(caption: limited)
         do {
             let data = try JSONEncoder().encode(next)
             // Do not replace unreadable originals; keep them for recovery.
