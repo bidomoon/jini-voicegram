@@ -13,7 +13,7 @@
   "appIdentifier": "registered-and-visible-in-Apple-Developer",
   "appStoreConnectRecord": "prepare-for-submission",
   "appStoreConnectAppId": "6835965836",
-  "xcodeBuild": "unsigned-simulator-build-and-native-tests-passed",
+  "xcodeBuild": "unsigned-simulator-build-release-archive-and-native-tests-passed",
   "xcodeCloud": "initial-project-onboarding-requires-Xcode-on-Mac",
   "testFlightUpload": "not-started",
   "appReviewSubmission": "not-submitted",
@@ -25,7 +25,7 @@
     "xcodeProjectStructureAndReferences": "parsed-no-broken-references",
     "plistPrivacyManifestAndSharedScheme": "parsed",
     "nativeSwiftCompile": "passed-on-Apple-SDK",
-    "nativeUnitTestsOnAppleSDK": "passed",
+    "nativeUnitTestsOnAppleSDK": "passed-8-tests-0-failures",
     "realIPhoneMicrophoneCameraAndSharing": "not-run",
     "webBrowserPhotoPost": "passed-in-isolated-selftest-and-loaded-after-page-reload",
     "webBrowserSampleVideo": {
@@ -59,13 +59,22 @@
       "realAccountDeletion": "not-performed",
       "microphoneRecognition": "not-tested",
       "paidAIGeneration": "not-requested"
-    }
+    },
+    "nativeDraftAutosave": "implemented-400ms-debounce-real-device-verification-pending",
+    "nativeDraftStorageTests": {
+      "stableIdentityAndRelaunch": "passed",
+      "emptyDraftAfterRelaunch": "passed",
+      "corruptOriginalPreserved": "passed",
+      "writeFailureDoesNotReportSaved": "passed",
+      "wholeEmojiUTF16Limit": "passed"
+    },
+    "nativeReleaseArchive": "passed-without-signing-no-iPad-orientation-warning"
   },
   "webBridgeDeployment": {
-    "id": "6afd92f627d8f2d3cd17cacd",
-    "sourceCommit": "d2bc6a2ca552d57a54d15dba4d4e752a9885c105",
+    "id": "6afd9e608c3caaa73132ec64",
+    "sourceCommit": "68134f1b31049f0c2eafdfc5c4892193ad022e1d",
     "state": "ready",
-    "publishedAtUTC": "2026-11-18T11:59:20.666Z"
+    "publishedAtUTC": "2026-11-18T12:47:54.253Z"
   },
   "appStoreConnectURL": "https://appstoreconnect.apple.com/apps/6835965836/distribution",
   "releaseMode": "manual",
@@ -82,26 +91,33 @@
   "nativeCI": {
     "provider": "GitHub Actions",
     "runner": "macos-26",
-    "runId": 44225816547,
-    "jobId": 134538599400,
-    "sourceCommit": "9d80318110f02406f6e242085c3fb687fe58adb6",
-    "url": "https://github.com/bidomoon/jini-voicegram/actions/runs/44225816547",
+    "runId": 44307289766,
+    "jobId": 134812034979,
+    "sourceCommit": "68134f1b31049f0c2eafdfc5c4892193ad022e1d",
+    "url": "https://github.com/bidomoon/jini-voicegram/actions/runs/44307289766",
     "status": "completed",
     "conclusion": "success",
     "signingCredentialsUsed": false,
-    "installableIPAProduced": false
+    "unsignedReleaseArchiveProduced": true,
+    "installableIPAProduced": false,
+    "nativeTestCount": 8,
+    "nativeTestFailures": 0,
+    "iPadOrientationArchiveWarning": false
   },
   "previousNativeCI": {
     "provider": "GitHub Actions",
     "runner": "macos-26",
-    "runId": 44126184330,
-    "jobId": 134190488470,
-    "sourceCommit": "49ca22a24eaca0f38f3282be2c8112fbafcc8e0a",
-    "url": "https://github.com/bidomoon/jini-voicegram/actions/runs/44126184330",
+    "runId": 44305294021,
+    "jobId": 134805167396,
+    "sourceCommit": "a85b6be9d8960111ecb1a632fdcae33ad79b2532",
+    "url": "https://github.com/bidomoon/jini-voicegram/actions/runs/44305294021",
     "status": "completed",
-    "conclusion": "failure",
+    "conclusion": "success",
     "signingCredentialsUsed": false,
-    "installableIPAProduced": false
+    "unsignedReleaseArchiveProduced": true,
+    "installableIPAProduced": false,
+    "nativeTestCount": 8,
+    "nativeTestFailures": 0
   },
   "webQualityCI": {
     "runId": 44299559782,
@@ -110,5 +126,14 @@
     "state": "completed",
     "conclusion": "success",
     "url": "https://github.com/bidomoon/jini-voicegram/actions/runs/44299559782"
+  },
+  "orientationFollowupCI": {
+    "runId": 44307289766,
+    "sourceCommit": "68134f1b31049f0c2eafdfc5c4892193ad022e1d",
+    "status": "completed",
+    "conclusion": "success",
+    "change": "add-missing-iPad-portrait-upside-down-orientation",
+    "jobId": 134812034979,
+    "archiveOrientationWarning": false
   }
 }

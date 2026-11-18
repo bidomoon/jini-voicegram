@@ -13,7 +13,9 @@
 ## 확인 상태
 
 - 로컬 웹 TypeScript 검사·88개 기존 자동검사·Netlify 프로덕션 빌드: 통과.
-- 새 Swift 수정본의 Apple SDK 컴파일·Release Archive·네이티브 테스트: GitHub iOS 검증 실행 후 갱신한다.
+- 소스 `a85b6be9d8960111ecb1a632fdcae33ad79b2532`, GitHub 실행 `44305294021` / 작업 `134805167396`: completed / success. Simulator 컴파일·서명 없는 iPhone Release Archive·네이티브 8개 테스트가 각각 통과했다. 실패 0개.
+- 첫 Archive에서 확인한 iPad 방향 경고를 수정했다. iPad에 상하 반전 세로 방향을 더해 네 방향을 모두 선언하며 iPhone의 세로 설정은 유지한다. 설정 파싱 검증 통과. 최종 소스 `68134f1b31049f0c2eafdfc5c4892193ad022e1d` / 실행 `44307289766` / 작업 `134812034979`는 completed / success다. Simulator 컴파일·iPhone Release Archive·네이티브 8개 테스트가 모두 통과했고 Archive 로그에서 해당 회전 경고가 사라졌다.
+- 기존 웹 운영 배포 `6afd9e608c3caaa73132ec64`는 같은 최종 소스에서 ready다. 배포 오류 없음, 게시 시각 2026-11-18 21:47:54 한국. 네이티브 앱 설치본 배포를 의미하지 않는다.
 - 실제 iPhone에서의 자동 저장·음성·카메라·공유 시험: 미완료. 강제 종료 직전 400ms 이내의 편집이나 기기 저장 실패까지 보존을 보장하지 않는다.
 
 ## TestFlight 재확인
@@ -23,3 +25,5 @@
 이 앱의 첫 Xcode Cloud 연결은 Mac의 Xcode에서 `ios/Voicegram/Voicegram.xcodeproj` → `Voicegram` 스킴 → Xcode Cloud 시작으로 진행해야 한다. 보이스그램 저장소 `bidomoon/jini-voicegram`, Bundle ID `kr.jiniteam.voicegram`, 개발 팀 `5H4Z8667H6`가 일치하는지 확인한 뒤 Archive와 TestFlight 배포를 연결한다. 웹 화면의 성공이나 다른 앱의 성공 빌드는 이 앱의 업로드 완료 증거가 아니다.
 
 공식 확인: https://developer.apple.com/documentation/xcode/configuring-your-first-xcode-cloud-workflow
+
+네 방향 선언의 공식 근거: https://developer.apple.com/documentation/uikit/uiviewcontroller/supportedinterfaceorientations
